@@ -9,7 +9,7 @@ import { getNextEvent, getPastEvents } from "@/lib/events";
 import { getPublishedPosts } from "@/lib/posts";
 import { getLatestEpisode } from "@/content/episodes";
 import { getPublishedPathways } from "@/lib/pathways";
-import { getOpenDrive } from "@/content/drives";
+import { getOpenDrive } from "@/lib/drives";
 
 async function HomeContent() {
   await connection();
@@ -20,7 +20,7 @@ async function HomeContent() {
   const latestPost = publishedPosts[0] ?? null;
   const latestEpisode = getLatestEpisode();
   const pathways = (await getPublishedPathways()).slice(0, 3);
-  const openDrive = getOpenDrive();
+  const openDrive = await getOpenDrive();
 
   return (
     <>

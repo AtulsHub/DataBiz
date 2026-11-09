@@ -4,6 +4,11 @@ import { and, desc, eq, ne } from "drizzle-orm";
 import { getDb, isDatabaseConfigured } from "@/db";
 import { eventRegistrations, events } from "@/db/schema";
 import {
+  listApplicationsForUser,
+  listSlotsForDrive,
+  type ApplicationSummary,
+} from "@/lib/applications";
+import {
   canTrackPathwayProgress,
   listUserPathwayProgress,
   type PathwayProgressSummary,
@@ -71,4 +76,22 @@ export async function listMyPathwayProgress(): Promise<PathwayProgressSummary[]>
   const session = await getSession();
   if (!session || !canTrackPathwayProgress(session.user.role)) return [];
   return listUserPathwayProgress(session.user.id);
+}
+
+export type MyApplicationBundle = {
+  application: ApplicationSummary;
+  slots: Awaited<ReturnType<typeof listSlotsForDrive>>;
+};
+
+export async function listMyApplications(): Promise<MyApplicationBundle[]> {
+  if (!isDatabaseConfigured()) return [];
+  const session = await getSession();
+  if (!session) return [];
+  const apps = await listApplicationsForUser(session.user.id);
+  return Promise.all(
+    apps.map(async (application) => ({
+      application,
+      slots: await listSlotsForDrive(application.drive.id),
+    })),
+  );
 }

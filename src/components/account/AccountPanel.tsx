@@ -4,11 +4,16 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import {
+  listMyApplications,
   listMyPathwayProgress,
   listMyRegistrations,
+  type MyApplicationBundle,
   type MyRegistration,
 } from "@/app/actions/account";
 import type { PathwayProgressSummary } from "@/lib/pathways";
+import { ApplicationCard } from "@/components/account/ApplicationCard";
+import { canRunInterviews } from "@/lib/applications";
+import type { Role } from "@/lib/roles";
 import { formatDateTime } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -25,22 +30,29 @@ export function AccountPanel() {
   const [pathwayProgress, setPathwayProgress] = useState<
     PathwayProgressSummary[] | null
   >(null);
+  const [applications, setApplications] = useState<MyApplicationBundle[] | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!data?.user) {
       setRegistrations(null);
       setPathwayProgress(null);
+      setApplications(null);
       return;
     }
     let cancelled = false;
-    void Promise.all([listMyRegistrations(), listMyPathwayProgress()]).then(
-      ([regs, progress]) => {
-        if (!cancelled) {
-          setRegistrations(regs);
-          setPathwayProgress(progress);
-        }
-      },
-    );
+    void Promise.all([
+      listMyRegistrations(),
+      listMyPathwayProgress(),
+      listMyApplications(),
+    ]).then(([regs, progress, apps]) => {
+      if (!cancelled) {
+        setRegistrations(regs);
+        setPathwayProgress(progress);
+        setApplications(apps);
+      }
+    });
     return () => {
       cancelled = true;
     };
@@ -116,6 +128,11 @@ export function AccountPanel() {
               Open admin
             </Button>
           ) : null}
+          {canRunInterviews((user.role as Role) || "applicant") ? (
+            <Button href="/interviews" variant="ghost" size="md">
+              Interviews
+            </Button>
+          ) : null}
           <SignOutButton />
         </div>
       </PageHero>
@@ -160,6 +177,36 @@ export function AccountPanel() {
                 }}
               />
             </div>
+          </div>
+        </Container>
+      </section>
+
+      <section className="border-t border-line py-16 sm:py-20">
+        <Container className="max-w-5xl">
+          <DeskLabel>Hiring</DeskLabel>
+          <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight">
+            Applications
+          </h2>
+          <div className="mt-8 space-y-4">
+            {applications === null ? (
+              <p className="text-sm text-mute">Loading applications…</p>
+            ) : applications.length === 0 ? (
+              <p className="text-sm text-mute">
+                No applications yet.{" "}
+                <Link href="/join" className="text-ember hover:underline">
+                  Check open drives
+                </Link>
+                .
+              </p>
+            ) : (
+              applications.map(({ application, slots }) => (
+                <ApplicationCard
+                  key={application.id}
+                  application={application}
+                  slots={slots}
+                />
+              ))
+            )}
           </div>
         </Container>
       </section>
@@ -262,7 +309,7 @@ export function AccountPanel() {
             )}
           </div>
           <p className="mt-8 text-sm text-mute">
-            Drive applications arrive in the next milestone. See{" "}
+            See{" "}
             <Link href="/privacy" className="text-ember hover:underline">
               privacy
             </Link>{" "}

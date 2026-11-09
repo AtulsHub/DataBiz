@@ -193,6 +193,9 @@ export const drives = pgTable(
     opensAt: timestamp("opens_at", { withTimezone: true }).notNull(),
     closesAt: timestamp("closes_at", { withTimezone: true }).notNull(),
     status: text("status").notNull().default("draft"),
+    resultsPublishedAt: timestamp("results_published_at", {
+      withTimezone: true,
+    }),
   },
   (t) => [uniqueIndex("drives_slug_uidx").on(t.slug)],
 );

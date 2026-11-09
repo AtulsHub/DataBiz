@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { getOpenDrive } from "@/content/drives";
+import { getOpenDrive } from "@/lib/drives";
 import { site } from "@/content/site";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 async function JoinContent() {
   await connection();
-  const drive = getOpenDrive();
+  const drive = await getOpenDrive();
 
   if (drive) {
     return (
@@ -27,10 +27,10 @@ async function JoinContent() {
           index="10"
           label="Recruiting now"
           title={drive.title}
-          description={drive.description}
+          description={drive.description.split("\n")[0] || drive.description}
         >
           <div className="mt-6">
-            <Button href={`/join/${drive.slug}`} variant="spark" size="lg">
+            <Button href={`/join/${drive.slug}`} variant="ember" size="lg">
               View the drive
             </Button>
           </div>
@@ -56,15 +56,21 @@ async function JoinContent() {
       />
       <section className="py-16 sm:py-20">
         <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-          <div role="status" className="border border-line-strong bg-panel p-8 text-white sm:p-10">
+          <div
+            role="status"
+            className="border border-line-strong bg-panel p-8 text-white sm:p-10"
+          >
             <DeskLabel tone="inverse">Notice</DeskLabel>
-            <h2 className="mt-4 font-display text-3xl font-bold tracking-tight">No open drive.</h2>
+            <h2 className="mt-4 font-display text-3xl font-bold tracking-tight">
+              No open drive.
+            </h2>
             <p className="mt-3 max-w-lg leading-relaxed text-white/70">
-              When a drive opens, it appears here and on the home page with roles, dates, and how the assessment and
-              interviews work. Applicants sign in with an @stu.manit.ac.in address.
+              When a drive opens, it appears here and on the home page with
+              roles, dates, and how the assessment and interviews work.
+              Applicants sign in with an @stu.manit.ac.in address.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button href="/login" variant="spark" size="md">
+              <Button href="/login" variant="ember" size="md">
                 Sign in
               </Button>
               <Button href="/contact" variant="inverse" size="md">
@@ -88,14 +94,21 @@ async function JoinContent() {
                     className="group flex items-center justify-between py-4 font-medium hover:text-signal"
                   >
                     {l.label}
-                    <ArrowUpRight size={18} aria-hidden className="text-ink/40 group-hover:text-signal" />
+                    <ArrowUpRight
+                      size={18}
+                      aria-hidden
+                      className="text-ink/40 group-hover:text-signal"
+                    />
                   </Link>
                 </li>
               ))}
             </ul>
             <p className="mt-6 text-sm text-steel">
               Questions about {site.name}? Write to{" "}
-              <a href={`mailto:${site.email}`} className="font-medium text-signal hover:underline">
+              <a
+                href={`mailto:${site.email}`}
+                className="font-medium text-signal hover:underline"
+              >
                 {site.email}
               </a>
               .
@@ -109,7 +122,11 @@ async function JoinContent() {
 
 export default function JoinPage() {
   return (
-    <Suspense fallback={<PageHero index="10" label="Join" title="Checking recruitment…" />}>
+    <Suspense
+      fallback={
+        <PageHero index="10" label="Join" title="Checking recruitment…" />
+      }
+    >
       <JoinContent />
     </Suspense>
   );

@@ -72,6 +72,9 @@ export function ImageUpload({
     body.append("timestamp", String(signed.upload.timestamp));
     body.append("signature", signed.upload.signature);
     body.append("folder", signed.upload.folder);
+    if (signed.upload.accessMode === "authenticated") {
+      body.append("access_mode", "authenticated");
+    }
 
     try {
       const response = await fetch(

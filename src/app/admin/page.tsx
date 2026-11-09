@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { Container } from "@/components/ui/Container";
 import { isDatabaseConfigured } from "@/db";
 import { countPendingAlumni } from "@/lib/alumni";
+import { countOpenDrives } from "@/lib/drives";
 import { getUpcomingEvents, isEventsDbReady } from "@/lib/events";
 
 export const metadata: Metadata = {
@@ -17,14 +18,20 @@ async function AdminHomeContent() {
     ? await getUpcomingEvents(new Date())
     : [];
   const pendingAlumni = await countPendingAlumni();
+  const openDrives = await countOpenDrives();
 
   return (
-    <div className="mt-10 grid gap-4 sm:grid-cols-3">
+    <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {[
         {
           label: "Database",
           value: isDatabaseConfigured() ? "Connected" : "Not configured",
           href: undefined as string | undefined,
+        },
+        {
+          label: "Open drives",
+          value: String(openDrives),
+          href: "/admin/drives",
         },
         {
           label: "Upcoming events",
