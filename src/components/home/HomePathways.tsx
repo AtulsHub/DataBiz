@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import type { Pathway } from "@/content/pathways";
+import type { PathwayItem } from "@/lib/pathways";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 
@@ -11,7 +11,7 @@ const disciplineLabel = {
   other: "Other",
 } as const;
 
-export function HomePathways({ pathways }: { pathways: Pathway[] }) {
+export function HomePathways({ pathways }: { pathways: PathwayItem[] }) {
   if (pathways.length === 0) return null;
 
   return (

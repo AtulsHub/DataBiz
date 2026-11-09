@@ -19,20 +19,29 @@ export type ActionResult = {
   fieldErrors?: Record<string, string>;
 };
 
+const optionalUrl = z
+  .string()
+  .trim()
+  .optional()
+  .refine(
+    (value) => !value || /^https?:\/\//i.test(value),
+    "Use a full URL starting with http:// or https://.",
+  );
+
 const eventFields = z.object({
   title: z.string().trim().min(1, "Title is required."),
   slug: z.string().trim().optional(),
   summary: z.string().trim().default(""),
   body: z.string().trim().default(""),
   venue: z.string().trim().default(""),
-  meetingUrl: z.string().trim().optional(),
+  meetingUrl: optionalUrl,
   startsAt: z.string().min(1, "Start time is required."),
   endsAt: z.string().min(1, "End time is required."),
   capacity: z.string().optional(),
   rsvpDeadline: z.string().optional(),
   status: z.enum(["draft", "published", "past"]),
   recapBody: z.string().trim().optional(),
-  recordingUrl: z.string().trim().optional(),
+  recordingUrl: optionalUrl,
   posterPublicId: z.string().trim().optional(),
   template: z.enum(["default", "fest"]).default("default"),
 });
@@ -57,24 +66,41 @@ function requireEventsDb(): ActionResult | null {
   return null;
 }
 
+function formString(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : "";
+}
+
+/** Prefer the clicked submit button (`intent`) over the status <select>. */
+function resolveEventStatus(
+  formData: FormData,
+): "draft" | "published" | "past" {
+  const intent = formString(formData, "intent");
+  if (intent === "publish") return "published";
+  if (intent === "draft") return "draft";
+  if (intent === "past") return "past";
+  const status = formString(formData, "status");
+  if (status === "published" || status === "past") return status;
+  return "draft";
+}
+
 function parseEventForm(formData: FormData) {
   return eventFields.safeParse({
-    title: formData.get("title"),
-    slug: formData.get("slug") || undefined,
-    summary: formData.get("summary") ?? "",
-    body: formData.get("body") ?? "",
-    venue: formData.get("venue") ?? "",
-    meetingUrl: String(formData.get("meetingUrl") ?? "").trim() || undefined,
-    startsAt: formData.get("startsAt"),
-    endsAt: formData.get("endsAt"),
-    capacity: String(formData.get("capacity") ?? ""),
-    rsvpDeadline: String(formData.get("rsvpDeadline") ?? ""),
-    status: formData.get("status"),
-    recapBody: String(formData.get("recapBody") ?? "").trim() || undefined,
-    recordingUrl: String(formData.get("recordingUrl") ?? "").trim() || undefined,
-    posterPublicId:
-      String(formData.get("posterPublicId") ?? "").trim() || undefined,
-    template: formData.get("template") || "default",
+    title: formString(formData, "title"),
+    slug: formString(formData, "slug") || undefined,
+    summary: formString(formData, "summary"),
+    body: formString(formData, "body"),
+    venue: formString(formData, "venue"),
+    meetingUrl: formString(formData, "meetingUrl") || undefined,
+    startsAt: formString(formData, "startsAt"),
+    endsAt: formString(formData, "endsAt"),
+    capacity: formString(formData, "capacity"),
+    rsvpDeadline: formString(formData, "rsvpDeadline"),
+    status: resolveEventStatus(formData),
+    recapBody: formString(formData, "recapBody") || undefined,
+    recordingUrl: formString(formData, "recordingUrl") || undefined,
+    posterPublicId: formString(formData, "posterPublicId") || undefined,
+    template: formString(formData, "template") || "default",
   });
 }
 
@@ -174,7 +200,11 @@ export async function createEvent(
 
   const parsed = parseEventForm(formData);
   if (!parsed.success) {
-    return { ok: false, fieldErrors: fieldErrorsFromZod(parsed.error) };
+    return {
+      ok: false,
+      error: "Fix the highlighted fields and try again.",
+      fieldErrors: fieldErrorsFromZod(parsed.error),
+    };
   }
 
   let id: string;
@@ -215,7 +245,11 @@ export async function updateEvent(
 
   const parsed = parseEventForm(formData);
   if (!parsed.success) {
-    return { ok: false, fieldErrors: fieldErrorsFromZod(parsed.error) };
+    return {
+      ok: false,
+      error: "Fix the highlighted fields and try again.",
+      fieldErrors: fieldErrorsFromZod(parsed.error),
+    };
   }
 
   try {

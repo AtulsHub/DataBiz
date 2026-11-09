@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { getPostBySlug, listPublicPostSlugs } from "@/lib/posts";
+import { getPostBySlug, listStaticPostParams } from "@/lib/posts";
 import { formatDate, readingTime } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -11,8 +12,7 @@ import { Markdown } from "@/components/ui/Markdown";
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  const slugs = await listPublicPostSlugs();
-  return slugs.map((slug) => ({ slug }));
+  return listStaticPostParams();
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -51,6 +51,16 @@ async function PostContent({ slug }: { slug: string }) {
       </header>
       <article className="py-12 sm:py-16">
         <Container width="narrow">
+          {post.coverUrl ? (
+            <Image
+              src={post.coverUrl}
+              alt=""
+              width={1200}
+              height={675}
+              className="mb-10 h-auto w-full border border-line"
+              priority
+            />
+          ) : null}
           <Markdown content={post.body} />
           <ul
             className="mt-12 flex flex-wrap gap-2 border-t border-line pt-6"

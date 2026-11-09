@@ -1,12 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import Link from "next/link";
 import { createPost, updatePost } from "@/app/actions/posts";
 import type { ActionResult } from "@/app/actions/events";
 import type { PostItem } from "@/lib/posts";
+import { CLOUDINARY_FOLDERS } from "@/lib/cloudinary-folders";
 import { Button } from "@/components/ui/Button";
 import { Field, inputClass, textareaClass } from "@/components/forms/Field";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 type Props = { post?: PostItem };
 
@@ -15,6 +17,27 @@ const initial: ActionResult = { ok: false };
 export function PostEditorForm({ post }: Props) {
   const action = post ? updatePost.bind(null, post.id!) : createPost;
   const [state, formAction, pending] = useActionState(action, initial);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const isPublished = post?.status === "published";
+
+  function insertIntoBody(snippet: string) {
+    const el = bodyRef.current;
+    if (!el) return;
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? el.value.length;
+    const before = el.value.slice(0, start);
+    const after = el.value.slice(end);
+    const needsLeadingNewline = before.length > 0 && !before.endsWith("\n");
+    const needsTrailingNewline = after.length > 0 && !after.startsWith("\n");
+    const block = `${needsLeadingNewline ? "\n\n" : ""}${snippet}${
+      needsTrailingNewline ? "\n\n" : ""
+    }`;
+    el.value = `${before}${block}${after}`;
+    const cursor = before.length + block.length;
+    el.focus();
+    el.setSelectionRange(cursor, cursor);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }
 
   return (
     <form action={formAction} className="space-y-6">
@@ -59,15 +82,19 @@ export function PostEditorForm({ post }: Props) {
             className={inputClass}
           />
         </Field>
-        <Field id="status" label="Status" required>
+        <Field
+          id="status"
+          label="Status"
+          hint="Draft stays private. Use Publish to open /blog/[slug]."
+        >
           <select
             id="status"
             name="status"
             defaultValue={post?.status ?? "draft"}
             className={inputClass}
           >
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
+            <option value="draft">Draft — not public</option>
+            <option value="published">Published — live on /blog</option>
           </select>
         </Field>
       </div>
@@ -82,8 +109,23 @@ export function PostEditorForm({ post }: Props) {
         />
       </Field>
 
-      <Field id="body" label="Body (markdown)">
+      <ImageUpload
+        name="coverPublicId"
+        folder={CLOUDINARY_FOLDERS.blog}
+        label="Cover image"
+        hint="Shown at the top of the public post. Uploads to Cloudinary blog/."
+        defaultPublicId={post?.coverPublicId}
+        defaultPreviewUrl={post?.coverUrl}
+        clearLabel="Clear cover"
+      />
+
+      <Field
+        id="body"
+        label="Body (markdown)"
+        hint="Supports headings, lists, links, code, and images. Use the uploader below to insert a picture."
+      >
         <textarea
+          ref={bodyRef}
           id="body"
           name="body"
           rows={16}
@@ -91,6 +133,17 @@ export function PostEditorForm({ post }: Props) {
           className={textareaClass}
         />
       </Field>
+
+      <ImageUpload
+        folder={CLOUDINARY_FOLDERS.blog}
+        label="Insert image into body"
+        hint="Uploads an image and inserts markdown at the cursor in the body."
+        clearLabel="Reset"
+        showPreview={false}
+        onUploaded={({ url }) => {
+          insertIntoBody(`![Image](${url})`);
+        }}
+      />
 
       <Field id="tags" label="Tags" hint="Comma-separated">
         <input
@@ -101,23 +154,34 @@ export function PostEditorForm({ post }: Props) {
         />
       </Field>
 
-      <Field id="coverPublicId" label="Cover public id" hint="Optional Cloudinary public id">
-        <input
-          id="coverPublicId"
-          name="coverPublicId"
-          defaultValue={post?.coverPublicId}
-          className={inputClass}
-        />
-      </Field>
-
-      <div className="flex flex-wrap gap-3">
-        <Button type="submit" variant="ember" disabled={pending}>
-          {pending ? "Saving…" : post ? "Save post" : "Create post"}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="submit"
+          name="intent"
+          value="publish"
+          variant="ember"
+          disabled={pending}
+        >
+          {pending ? "Saving…" : "Publish"}
         </Button>
-        {post ? (
-          <Button href={`/blog/${post.slug}`} variant="ghost">
+        <Button
+          type="submit"
+          name="intent"
+          value="draft"
+          variant="ghost"
+          disabled={pending}
+        >
+          Save draft
+        </Button>
+        {isPublished ? (
+          <Button href={`/blog/${post!.slug}`} variant="ghost">
             View public page
           </Button>
+        ) : post ? (
+          <p className="text-sm text-mute">
+            Public URL opens after you click{" "}
+            <span className="font-medium text-ink">Publish</span>.
+          </p>
         ) : (
           <Link href="/admin/posts" className="text-sm text-mute hover:text-ink">
             Cancel

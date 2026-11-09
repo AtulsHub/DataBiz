@@ -3,6 +3,11 @@
 import { and, desc, eq, ne } from "drizzle-orm";
 import { getDb, isDatabaseConfigured } from "@/db";
 import { eventRegistrations, events } from "@/db/schema";
+import {
+  canTrackPathwayProgress,
+  listUserPathwayProgress,
+  type PathwayProgressSummary,
+} from "@/lib/pathways";
 import { getSession } from "@/lib/session";
 
 export type MyRegistration = {
@@ -59,4 +64,11 @@ export async function listMyRegistrations(): Promise<MyRegistration[]> {
       status: row.eventStatus,
     },
   }));
+}
+
+export async function listMyPathwayProgress(): Promise<PathwayProgressSummary[]> {
+  if (!isDatabaseConfigured()) return [];
+  const session = await getSession();
+  if (!session || !canTrackPathwayProgress(session.user.role)) return [];
+  return listUserPathwayProgress(session.user.id);
 }

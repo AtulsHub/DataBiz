@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import {
+  listMyPathwayProgress,
   listMyRegistrations,
   type MyRegistration,
 } from "@/app/actions/account";
+import type { PathwayProgressSummary } from "@/lib/pathways";
 import { formatDateTime } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -20,16 +22,25 @@ export function AccountPanel() {
   const [registrations, setRegistrations] = useState<MyRegistration[] | null>(
     null,
   );
+  const [pathwayProgress, setPathwayProgress] = useState<
+    PathwayProgressSummary[] | null
+  >(null);
 
   useEffect(() => {
     if (!data?.user) {
       setRegistrations(null);
+      setPathwayProgress(null);
       return;
     }
     let cancelled = false;
-    void listMyRegistrations().then((rows) => {
-      if (!cancelled) setRegistrations(rows);
-    });
+    void Promise.all([listMyRegistrations(), listMyPathwayProgress()]).then(
+      ([regs, progress]) => {
+        if (!cancelled) {
+          setRegistrations(regs);
+          setPathwayProgress(progress);
+        }
+      },
+    );
     return () => {
       cancelled = true;
     };
@@ -97,7 +108,7 @@ export function AccountPanel() {
       <PageHero
         label="Account"
         title={user.name?.trim() || "Your account"}
-        description="Edit your profile details here. Applications, RSVPs, and pathway progress also live on this page as those features ship."
+        description="Edit your profile, review RSVPs, and track pathway modules from this page."
       >
         <div className="mt-6 flex flex-wrap gap-3">
           {user.role === "admin" ? (
@@ -200,9 +211,58 @@ export function AccountPanel() {
               </ul>
             )}
           </div>
+        </Container>
+      </section>
+
+      <section className="border-t border-line py-16 sm:py-20">
+        <Container className="max-w-5xl">
+          <DeskLabel>Learn</DeskLabel>
+          <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight">
+            Pathway progress
+          </h2>
+          <div className="mt-8">
+            {pathwayProgress === null ? (
+              <p className="text-sm text-mute">Loading pathway progress…</p>
+            ) : pathwayProgress.length === 0 ? (
+              <p className="text-sm text-mute">
+                Pathway tracking is for members. Browse{" "}
+                <Link href="/learn" className="text-ember hover:underline">
+                  /learn
+                </Link>{" "}
+                anytime; ask an admin if you need the member role.
+              </p>
+            ) : (
+              <ul className="divide-y divide-line border-y border-line">
+                {pathwayProgress.map((row) => (
+                  <li
+                    key={row.pathway.id}
+                    className="flex flex-wrap items-baseline justify-between gap-3 py-4"
+                  >
+                    <div>
+                      <Link
+                        href={`/learn/${row.pathway.slug}`}
+                        className="font-medium text-ink hover:text-ember"
+                      >
+                        {row.pathway.title}
+                      </Link>
+                      <p className="mt-1 font-mono text-xs text-mute">
+                        {row.completed}/{row.total} modules complete
+                      </p>
+                    </div>
+                    <Button
+                      href={`/learn/${row.pathway.slug}`}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      Continue
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <p className="mt-8 text-sm text-mute">
-            Drive applications and pathway progress arrive in later milestones.
-            See{" "}
+            Drive applications arrive in the next milestone. See{" "}
             <Link href="/privacy" className="text-ember hover:underline">
               privacy
             </Link>{" "}

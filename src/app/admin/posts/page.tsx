@@ -31,7 +31,7 @@ export default async function AdminPostsPage() {
 
       {!dbReady ? (
         <p className="mt-8 border border-line bg-paper-elevated px-4 py-3 text-sm text-mute">
-          Connect Neon to manage posts. Public `/blog` still serves seed copy.
+          Connect Neon to manage posts. Public `/blog` stays empty until you publish.
         </p>
       ) : posts.length === 0 ? (
         <p className="mt-8 text-sm text-mute">No posts in the database yet.</p>

@@ -99,47 +99,170 @@
   }
 
   .prose-databiz {
-    font-family: var(--font-literata), Georgia, serif;
+    font-family: var(--font-literata), Georgia, "Times New Roman", serif;
     font-size: 1.125rem;
     line-height: 1.8;
     color: var(--ink-soft);
   }
 
-  .prose-databiz h2 {
-    font-family: var(--font-sora), sans-serif;
-    font-size: clamp(1.45rem, 2.4vw, 1.75rem);
+  .prose-databiz > :first-child {
+    margin-top: 0;
+  }
+
+  .prose-databiz h1,
+  .prose-databiz h2,
+  .prose-databiz h3,
+  .prose-databiz h4 {
+    font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
     font-weight: 600;
     letter-spacing: -0.03em;
     color: var(--ink);
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  .prose-databiz h1 {
+    font-size: clamp(1.85rem, 3.2vw, 2.35rem);
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .prose-databiz h2 {
+    font-size: clamp(1.45rem, 2.4vw, 1.75rem);
     margin-top: 2.4rem;
     margin-bottom: 0.85rem;
   }
 
   .prose-databiz h3 {
-    font-family: var(--font-sora), sans-serif;
     font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--ink);
     margin-top: 1.85rem;
     margin-bottom: 0.6rem;
+  }
+
+  .prose-databiz h4 {
+    font-size: 1.05rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
   }
 
   .prose-databiz p {
     margin-bottom: 1.15rem;
   }
 
+  .prose-databiz ul,
+  .prose-databiz ol {
+    padding-left: 1.35rem;
+    margin-bottom: 1.15rem;
+  }
+
   .prose-databiz ul {
     list-style: disc;
-    padding-left: 1.25rem;
-    margin-bottom: 1.15rem;
+  }
+
+  .prose-databiz ol {
+    list-style: decimal;
   }
 
   .prose-databiz li {
     margin-bottom: 0.4rem;
   }
 
+  .prose-databiz li > ul,
+  .prose-databiz li > ol {
+    margin-top: 0.35rem;
+    margin-bottom: 0.35rem;
+  }
+
   .prose-databiz strong {
     color: var(--ink);
+    font-weight: 600;
+  }
+
+  .prose-databiz em {
+    font-style: italic;
+  }
+
+  .prose-databiz a {
+    color: var(--ember);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  .prose-databiz a:hover {
+    color: var(--ember-deep);
+  }
+
+  .prose-databiz blockquote {
+    margin: 1.5rem 0;
+    padding: 0.15rem 0 0.15rem 1rem;
+    border-left: 3px solid var(--ember);
+    color: var(--mute);
+    font-style: italic;
+  }
+
+  .prose-databiz hr {
+    margin: 2rem 0;
+    border: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .prose-databiz img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 1.5rem 0;
+    border: 1px solid var(--line);
+  }
+
+  .prose-databiz .inline-code,
+  .prose-databiz :not(pre) > code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.9em;
+    padding: 0.12em 0.35em;
+    border-radius: 0.2rem;
+    background: var(--paper-elevated);
+    border: 1px solid var(--line);
+    color: var(--ink);
+  }
+
+  .prose-databiz pre {
+    margin: 1.35rem 0;
+    padding: 1rem 1.1rem;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    background: var(--void-soft);
+    color: var(--paper);
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+
+  .prose-databiz pre code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  .prose-databiz table {
+    width: 100%;
+    margin: 1.35rem 0;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+
+  .prose-databiz th,
+  .prose-databiz td {
+    border: 1px solid var(--line);
+    padding: 0.55rem 0.7rem;
+    text-align: left;
+  }
+
+  .prose-databiz th {
+    background: var(--paper-elevated);
+    color: var(--ink);
+    font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
     font-weight: 600;
   }
 }

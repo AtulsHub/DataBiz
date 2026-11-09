@@ -1,17 +1,10 @@
 import { v2 as cloudinary } from "cloudinary";
+import {
+  CLOUDINARY_FOLDERS,
+  type CloudinaryFolder,
+} from "@/lib/cloudinary-folders";
 
-export const CLOUDINARY_FOLDERS = {
-  posters: "posters",
-  blog: "blog",
-  show: "show",
-  gallery: "gallery",
-  avatars: "avatars",
-  sponsors: "sponsors",
-  resumes: "resumes",
-} as const;
-
-export type CloudinaryFolder =
-  (typeof CLOUDINARY_FOLDERS)[keyof typeof CLOUDINARY_FOLDERS];
+export { CLOUDINARY_FOLDERS, type CloudinaryFolder };
 
 export function isCloudinaryConfigured() {
   return Boolean(
@@ -62,4 +55,3 @@ export function signBrowserUpload(input: {
     resourceType: input.resourceType ?? "image",
   };
 }
-

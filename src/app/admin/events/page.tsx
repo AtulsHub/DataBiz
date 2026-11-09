@@ -32,7 +32,7 @@ export default async function AdminEventsPage() {
       {!dbReady ? (
         <p className="mt-8 border border-line bg-paper-elevated px-4 py-3 text-sm text-mute">
           Connect Neon (`DATABASE_URL`) and run `pnpm db:push` to manage events
-          here. The public site still serves seed events until then.
+          here. Public `/events` stays empty until Neon is connected and you publish.
         </p>
       ) : events.length === 0 ? (
         <p className="mt-8 text-sm text-mute">

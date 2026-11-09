@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { ArrowUpRight } from "lucide-react";
-import { getPublishedPathways } from "@/content/pathways";
+import { getPublishedPathways } from "@/lib/pathways";
 import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHero } from "@/components/ui/PageHero";
@@ -19,8 +21,9 @@ const disciplineLabel = {
   other: "Other",
 } as const;
 
-export default function LearnPage() {
-  const pathways = getPublishedPathways();
+async function LearnContent() {
+  await connection();
+  const pathways = await getPublishedPathways();
 
   return (
     <>
@@ -28,7 +31,7 @@ export default function LearnPage() {
         index="07"
         label="Learn"
         title="Pick a pathway. Follow the modules."
-        description="Each pathway links out to external sources the core trusts — nothing is rehosted, nothing is padded."
+        description="Each pathway links out to external sources the core trusts — nothing is rehosted, nothing is padded. Members can mark modules complete."
       />
       <section className="py-16 sm:py-20">
         <Container>
@@ -49,20 +52,26 @@ export default function LearnPage() {
                     >
                       <div>
                         <p className="font-mono text-xs uppercase tracking-[0.14em] text-signal">
-                          {String(i + 1).padStart(2, "0")} · {disciplineLabel[pathway.discipline]}
+                          {String(i + 1).padStart(2, "0")} ·{" "}
+                          {disciplineLabel[pathway.discipline]}
                         </p>
                         <h2 className="mt-3 font-display text-3xl font-bold tracking-tight group-hover:text-signal">
                           {pathway.title}
                         </h2>
-                        <p className="mt-3 leading-relaxed text-steel">{pathway.summary}</p>
+                        <p className="mt-3 leading-relaxed text-steel">
+                          {pathway.summary}
+                        </p>
                         <span className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-ink/60 group-hover:text-signal">
-                          {pathway.modules.length} modules <ArrowUpRight size={16} aria-hidden />
+                          {pathway.modules.length} modules{" "}
+                          <ArrowUpRight size={16} aria-hidden />
                         </span>
                       </div>
                       <ol className="divide-y divide-line self-center border-y border-line text-sm">
                         {pathway.modules.map((m, j) => (
-                          <li key={m.url} className="flex gap-4 py-3">
-                            <span className="font-mono text-steel">{String(j + 1).padStart(2, "0")}</span>
+                          <li key={m.id} className="flex gap-4 py-3">
+                            <span className="font-mono text-steel">
+                              {String(j + 1).padStart(2, "0")}
+                            </span>
                             <span className="font-medium">{m.title}</span>
                           </li>
                         ))}
@@ -76,5 +85,22 @@ export default function LearnPage() {
         </Container>
       </section>
     </>
+  );
+}
+
+export default function LearnPage() {
+  return (
+    <Suspense
+      fallback={
+        <PageHero
+          index="07"
+          label="Learn"
+          title="Pick a pathway. Follow the modules."
+          description="Loading pathways…"
+        />
+      }
+    >
+      <LearnContent />
+    </Suspense>
   );
 }

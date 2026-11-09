@@ -8,7 +8,7 @@ import { HomeContactStrip } from "@/components/home/HomeContactStrip";
 import { getNextEvent, getPastEvents } from "@/lib/events";
 import { getPublishedPosts } from "@/lib/posts";
 import { getLatestEpisode } from "@/content/episodes";
-import { getPublishedPathways } from "@/content/pathways";
+import { getPublishedPathways } from "@/lib/pathways";
 import { getOpenDrive } from "@/content/drives";
 
 async function HomeContent() {
@@ -19,7 +19,7 @@ async function HomeContent() {
   const publishedPosts = await getPublishedPosts();
   const latestPost = publishedPosts[0] ?? null;
   const latestEpisode = getLatestEpisode();
-  const pathways = getPublishedPathways().slice(0, 3);
+  const pathways = (await getPublishedPathways()).slice(0, 3);
   const openDrive = getOpenDrive();
 
   return (

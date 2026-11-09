@@ -41,6 +41,33 @@ function fieldErrorsFromZod(error: z.ZodError): Record<string, string> {
   return out;
 }
 
+function formString(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : "";
+}
+
+/** Prefer the clicked submit button (`intent`) over the status <select>. */
+function resolvePostStatus(formData: FormData): "draft" | "published" {
+  const intent = formString(formData, "intent");
+  if (intent === "publish") return "published";
+  if (intent === "draft") return "draft";
+  const status = formString(formData, "status");
+  return status === "published" ? "published" : "draft";
+}
+
+function parsePostForm(formData: FormData) {
+  return postFields.safeParse({
+    title: formString(formData, "title"),
+    slug: formString(formData, "slug") || undefined,
+    excerpt: formString(formData, "excerpt"),
+    body: formString(formData, "body"),
+    authorName: formString(formData, "authorName"),
+    tags: formString(formData, "tags"),
+    status: resolvePostStatus(formData),
+    coverPublicId: formString(formData, "coverPublicId") || undefined,
+  });
+}
+
 function parseTags(raw: string) {
   return raw
     .split(",")
@@ -73,19 +100,13 @@ export async function createPost(
   const blocked = requirePostsDb();
   if (blocked) return blocked;
 
-  const parsed = postFields.safeParse({
-    title: formData.get("title"),
-    slug: formData.get("slug") || undefined,
-    excerpt: formData.get("excerpt") ?? "",
-    body: formData.get("body") ?? "",
-    authorName: formData.get("authorName"),
-    tags: formData.get("tags") ?? "",
-    status: formData.get("status"),
-    coverPublicId: String(formData.get("coverPublicId") ?? "").trim() || undefined,
-  });
-
+  const parsed = parsePostForm(formData);
   if (!parsed.success) {
-    return { ok: false, fieldErrors: fieldErrorsFromZod(parsed.error) };
+    return {
+      ok: false,
+      error: "Fix the highlighted fields and try again.",
+      fieldErrors: fieldErrorsFromZod(parsed.error),
+    };
   }
 
   let id: string;
@@ -131,19 +152,13 @@ export async function updatePost(
   const blocked = requirePostsDb();
   if (blocked) return blocked;
 
-  const parsed = postFields.safeParse({
-    title: formData.get("title"),
-    slug: formData.get("slug") || undefined,
-    excerpt: formData.get("excerpt") ?? "",
-    body: formData.get("body") ?? "",
-    authorName: formData.get("authorName"),
-    tags: formData.get("tags") ?? "",
-    status: formData.get("status"),
-    coverPublicId: String(formData.get("coverPublicId") ?? "").trim() || undefined,
-  });
-
+  const parsed = parsePostForm(formData);
   if (!parsed.success) {
-    return { ok: false, fieldErrors: fieldErrorsFromZod(parsed.error) };
+    return {
+      ok: false,
+      error: "Fix the highlighted fields and try again.",
+      fieldErrors: fieldErrorsFromZod(parsed.error),
+    };
   }
 
   try {

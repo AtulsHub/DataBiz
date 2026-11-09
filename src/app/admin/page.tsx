@@ -73,7 +73,8 @@ export default function AdminHomePage() {
         Semester desk
       </h1>
       <p className="mt-3 max-w-2xl text-mute leading-relaxed">
-        Publish events and posts, approve alumni, and run drives from here.
+        Publish events, posts, and pathways, approve alumni, and run drives from
+        here.
       </p>
       <Suspense
         fallback={

@@ -4,8 +4,8 @@ import {
   CLOUDINARY_FOLDERS,
   isCloudinaryConfigured,
   signBrowserUpload,
-  type CloudinaryFolder,
 } from "@/lib/cloudinary";
+import type { CloudinaryFolder } from "@/lib/cloudinary-folders";
 import { requireAdmin } from "@/lib/session";
 
 export type SignedUpload = {

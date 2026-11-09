@@ -7,7 +7,7 @@ import {
   countRegistered,
   getEventBySlug,
   isEventsDbReady,
-  listPublicEventSlugs,
+  listStaticEventParams,
   rsvpClosedReason,
   rsvpOpen,
 } from "@/lib/events";
@@ -24,8 +24,7 @@ import { EventRsvpForm } from "@/components/forms/EventRsvpForm";
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  const slugs = await listPublicEventSlugs();
-  return slugs.map((slug) => ({ slug }));
+  return listStaticEventParams();
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

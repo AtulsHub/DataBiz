@@ -14,7 +14,8 @@ import { PageHero } from "@/components/ui/PageHero";
 type Props = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
-  return getPublishedEpisodes().map((e) => ({ slug: e.slug }));
+  const params = getPublishedEpisodes().map((e) => ({ slug: e.slug }));
+  return params.length > 0 ? params : [{ slug: "no-episodes" }];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

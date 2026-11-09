@@ -117,3 +117,9 @@ export async function listPublicPostSlugs() {
   const dbSlugs = rows.map((r) => r.slug);
   return dbSlugs.length > 0 ? dbSlugs : seedSlugs;
 }
+
+/** Cache Components requires at least one static param. */
+export async function listStaticPostParams() {
+  const slugs = await listPublicPostSlugs();
+  return slugs.length > 0 ? slugs.map((slug) => ({ slug })) : [{ slug: "no-posts" }];
+}

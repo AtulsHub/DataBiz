@@ -93,11 +93,18 @@ export function EventEditorForm({ event }: Props) {
             className={inputClass}
           />
         </Field>
-        <Field id="meetingUrl" label="Meeting URL">
+        <Field
+          id="meetingUrl"
+          label="Meeting URL"
+          error={state.fieldErrors?.meetingUrl}
+          hint="Optional. Full URL, e.g. https://…"
+        >
           <input
             id="meetingUrl"
             name="meetingUrl"
-            type="url"
+            type="text"
+            inputMode="url"
+            placeholder="https://"
             defaultValue={event?.meetingUrl}
             className={inputClass}
           />
@@ -203,11 +210,18 @@ export function EventEditorForm({ event }: Props) {
         defaultPreviewUrl={event?.posterUrl}
       />
 
-      <Field id="recordingUrl" label="Recording URL">
+      <Field
+        id="recordingUrl"
+        label="Recording URL"
+        error={state.fieldErrors?.recordingUrl}
+        hint="Optional. Full URL, e.g. https://…"
+      >
         <input
           id="recordingUrl"
           name="recordingUrl"
-          type="url"
+          type="text"
+          inputMode="url"
+          placeholder="https://"
           defaultValue={event?.recordingUrl}
           className={inputClass}
         />
@@ -228,8 +242,17 @@ export function EventEditorForm({ event }: Props) {
       </Field>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" variant="ember" disabled={pending}>
-          {pending ? "Saving…" : event ? "Save event" : "Create event"}
+        <Button
+          type="submit"
+          name="intent"
+          value="publish"
+          variant="ember"
+          disabled={pending}
+        >
+          {pending ? "Saving…" : "Publish"}
+        </Button>
+        <Button type="submit" variant="ghost" disabled={pending}>
+          {pending ? "Saving…" : "Save"}
         </Button>
         {event && event.status !== "draft" ? (
           <Button href={`/events/${event.slug}`} variant="ghost">
@@ -237,9 +260,8 @@ export function EventEditorForm({ event }: Props) {
           </Button>
         ) : event ? (
           <p className="text-sm text-mute">
-            Set status to <span className="font-medium text-ink">Published</span>{" "}
-            and save to open{" "}
-            <span className="font-mono text-xs">/events/{event.slug}</span>.
+            Public URL opens after you click{" "}
+            <span className="font-medium text-ink">Publish</span>.
           </p>
         ) : (
           <Link href="/admin/events" className="text-sm text-mute hover:text-ink">

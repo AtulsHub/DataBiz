@@ -161,8 +161,13 @@ export async function listPublicEventSlugs() {
     .where(ne(eventsTable.status, "draft"));
   const dbSlugs = rows.map((r) => r.slug);
 
-  // Cache Components requires generateStaticParams to return at least one path.
   return dbSlugs.length > 0 ? dbSlugs : seedSlugs;
+}
+
+/** Cache Components requires at least one static param. */
+export async function listStaticEventParams() {
+  const slugs = await listPublicEventSlugs();
+  return slugs.length > 0 ? slugs.map((slug) => ({ slug })) : [{ slug: "no-events" }];
 }
 
 export async function countRegistered(eventId: string) {
