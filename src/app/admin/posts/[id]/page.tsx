@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { PostEditorForm } from "@/components/admin/PostEditorForm";
@@ -28,6 +29,16 @@ export default async function AdminPostDetailPage({ params }: Props) {
       <p className="mt-2 font-mono text-xs text-mute">
         /blog/{post.slug} · {post.status}
       </p>
+      {post.status === "published" ? (
+        <p className="mt-4 text-sm text-mute">
+          <Link
+            href={`/admin/newsletter?source=post&id=${encodeURIComponent(post.id)}&subject=${encodeURIComponent(post.title)}&body=${encodeURIComponent(`${post.excerpt}\n\nhttps://www.databiz.in/blog/${post.slug}`)}`}
+            className="text-ember hover:underline"
+          >
+            Mail confirmed subscribers about this post
+          </Link>
+        </p>
+      ) : null}
       <div className="mt-10 max-w-3xl">
         <PostEditorForm post={post} />
       </div>

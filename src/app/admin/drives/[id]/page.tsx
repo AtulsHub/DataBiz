@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { DriveEditorForm } from "@/components/admin/DriveEditorForm";
@@ -69,6 +70,16 @@ export default async function AdminDriveDetailPage({ params }: Props) {
           /join/{drive.slug} · {drive.status}
           {drive.resultsPublishedAt ? " · results published" : ""}
         </p>
+        {drive.status === "open" ? (
+          <p className="mt-4 text-sm text-mute">
+            <Link
+              href={`/admin/newsletter?source=drive&id=${encodeURIComponent(drive.id)}&subject=${encodeURIComponent(`Recruiting · ${drive.title}`)}&body=${encodeURIComponent(`${drive.title} is open.\n\nhttps://www.databiz.in/join/${drive.slug}`)}`}
+              className="text-ember hover:underline"
+            >
+              Mail confirmed subscribers that this drive is open
+            </Link>
+          </p>
+        ) : null}
       </div>
 
       <section className="max-w-3xl space-y-4">

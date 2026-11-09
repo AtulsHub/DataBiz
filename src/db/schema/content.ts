@@ -272,6 +272,18 @@ export const subscribers = pgTable(
   (t) => [uniqueIndex("subscribers_email_uidx").on(t.email)],
 );
 
+export const newsletterSends = pgTable("newsletter_sends", {
+  id: text("id").primaryKey(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+  recipientCount: integer("recipient_count").notNull().default(0),
+  sourceType: text("source_type"),
+  sourceId: text("source_id"),
+  status: text("status").notNull().default("sent"),
+  error: text("error"),
+});
+
 export const contactMessages = pgTable("contact_messages", {
   id: text("id").primaryKey(),
   firstName: text("first_name").notNull(),

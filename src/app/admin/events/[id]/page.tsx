@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { EventEditorForm } from "@/components/admin/EventEditorForm";
 import { EventRegistrationsTable } from "@/components/admin/EventRegistrationsTable";
+import { EventReminderButton } from "@/components/admin/EventReminderButton";
 import {
   getAdminEvent,
   isEventsDbReady,
   listEventRegistrations,
 } from "@/lib/events";
+import { getDb } from "@/db";
+import { events as eventsTable } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export const instant = false;
 
@@ -29,6 +34,16 @@ export default async function AdminEventDetailPage({ params }: Props) {
   if (!event?.id) notFound();
 
   const registrations = await listEventRegistrations(event.id);
+  const db = getDb();
+  const [eventRow] = db
+    ? await db
+        .select({ reminderSentAt: eventsTable.reminderSentAt })
+        .from(eventsTable)
+        .where(eq(eventsTable.id, event.id))
+        .limit(1)
+    : [undefined];
+
+  const mailHref = `/admin/newsletter?source=event&id=${encodeURIComponent(event.id)}&subject=${encodeURIComponent(`Event · ${event.title}`)}&body=${encodeURIComponent(`${event.title}\n\n${event.summary}\n\nhttps://www.databiz.in/events/${event.slug}`)}`;
 
   return (
     <Container className="space-y-14 py-12">
@@ -39,10 +54,30 @@ export default async function AdminEventDetailPage({ params }: Props) {
         <p className="mt-2 font-mono text-xs text-mute">
           /events/{event.slug} · {event.status}
         </p>
+        {event.status === "published" ? (
+          <p className="mt-4 text-sm text-mute">
+            <Link href={mailHref} className="text-ember hover:underline">
+              Mail confirmed subscribers about this event
+            </Link>
+          </p>
+        ) : null}
         <div className="mt-10 max-w-3xl">
           <EventEditorForm event={event} />
         </div>
       </div>
+
+      <section className="space-y-4">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">
+          Reminder
+        </h2>
+        <p className="text-sm text-mute">
+          Manual day-before mail to registrants (no cron).
+        </p>
+        <EventReminderButton
+          eventId={event.id}
+          alreadySent={Boolean(eventRow?.reminderSentAt)}
+        />
+      </section>
 
       <section>
         <h2 className="font-display text-2xl font-semibold tracking-tight">

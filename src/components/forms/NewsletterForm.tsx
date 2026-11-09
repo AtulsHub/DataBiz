@@ -1,52 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState } from "react";
+import {
+  subscribeNewsletter,
+  type NewsletterActionResult,
+} from "@/app/actions/newsletter";
 import { Button } from "@/components/ui/Button";
 
-export function NewsletterForm() {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sent" | "error">("idle");
+const initial: NewsletterActionResult = { ok: false };
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email.includes("@")) {
-      setStatus("error");
-      return;
-    }
-    setStatus("sent");
-    setEmail("");
-  }
+export function NewsletterForm() {
+  const [state, formAction, pending] = useActionState(
+    subscribeNewsletter,
+    initial,
+  );
 
   return (
-    <form onSubmit={onSubmit} className="flex w-full max-w-md flex-col gap-3">
+    <form action={formAction} className="flex w-full max-w-md flex-col gap-3">
       <label className="sr-only" htmlFor="newsletter-email">
         Email for newsletter
       </label>
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
           id="newsletter-email"
+          name="email"
           type="email"
           required
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setStatus("idle");
-          }}
           placeholder="you@email.com"
           className="h-11 flex-1 rounded-sm border border-white/15 bg-void-soft px-3 text-sm text-paper placeholder:text-white/35 focus:border-ember focus:outline-none"
         />
-        <Button type="submit" variant="ember" size="md" className="sm:w-auto">
-          Subscribe
+        <Button
+          type="submit"
+          variant="ember"
+          size="md"
+          className="sm:w-auto"
+          disabled={pending}
+        >
+          {pending ? "Sending…" : "Subscribe"}
         </Button>
       </div>
-      {status === "sent" ? (
+      {state.ok ? (
         <p className="text-sm text-ember" role="status">
-          Check your inbox to confirm.
+          {state.already
+            ? state.message || "You are already subscribed."
+            : "Check your inbox to confirm."}
         </p>
       ) : null}
-      {status === "error" ? (
+      {!state.ok && state.error ? (
         <p className="text-sm text-red-300" role="alert">
-          Enter a valid email address.
+          {state.error}
         </p>
       ) : null}
     </form>
