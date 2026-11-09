@@ -2,70 +2,103 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
-import { DeskLabel } from "@/components/ui/DeskLabel";
 import { PageHero } from "@/components/ui/PageHero";
+import { SignOutButton } from "@/components/account/SignOutButton";
+import { getSession } from "@/lib/session";
+import { isAuthConfigured } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Account",
   description: "Your DataBiz account after you sign in.",
 };
 
-const afterLogin = [
-  {
-    title: "Your profile",
-    body: "Name, year, branch, and phone — the details used when you apply or RSVP.",
-  },
-  {
-    title: "Applications",
-    body: "Status of any recruitment drive you've applied to, including assessment and interview stages.",
-  },
-  {
-    title: "Results",
-    body: "When a drive concludes, your result shows here and nowhere public.",
-  },
-  {
-    title: "RSVPs",
-    body: "Events you've registered for, in one list.",
-  },
-];
+export default async function AccountPage() {
+  const session = await getSession();
 
-export default function AccountPage() {
+  if (!session) {
+    return (
+      <>
+        <PageHero
+          label="Account"
+          title="You're not signed in."
+          description="Your account is a private page for MANIT students. Sign in with your college email to see applications, RSVPs, and pathway progress."
+        >
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button href="/login?next=/account" variant="primary" size="md">
+              Sign in
+            </Button>
+            <Button href="/faq" variant="ghost" size="md">
+              Read the FAQ
+            </Button>
+          </div>
+        </PageHero>
+        <section className="py-12">
+          <Container>
+            <p className="max-w-xl text-sm text-mute">
+              Auth backend:{" "}
+              {isAuthConfigured()
+                ? "configured — request a magic link from the sign-in page."
+                : "not configured yet. Add Neon + Better Auth env vars from .env.example."}
+            </p>
+          </Container>
+        </section>
+      </>
+    );
+  }
+
+  const { user } = session;
+
   return (
     <>
       <PageHero
-        index="14"
         label="Account"
-        title="You're not signed in."
-        description="Your account is a private page for MANIT students. Here is what lives on it once you sign in."
+        title={user.name || "Your account"}
+        description="Profile, applications, and event registrations will expand here as those features ship."
       >
         <div className="mt-6 flex flex-wrap gap-3">
-          <Button href="/login" variant="primary" size="md">
-            Sign in
-          </Button>
-          <Button href="/faq" variant="ghost" size="md">
-            Read the FAQ
-          </Button>
+          {user.role === "admin" ? (
+            <Button href="/admin" variant="ember" size="md">
+              Open admin
+            </Button>
+          ) : null}
+          <SignOutButton />
         </div>
       </PageHero>
       <section className="py-16 sm:py-20">
-        <Container>
-          <DeskLabel>After you sign in</DeskLabel>
-          <ol className="mt-6 divide-y divide-line border-y border-line">
-            {afterLogin.map((item, i) => (
-              <li key={item.title} className="grid gap-2 py-6 sm:grid-cols-[5rem_1fr_1.4fr] sm:gap-8">
-                <span className="font-mono text-sm text-signal">{String(i + 1).padStart(2, "0")}</span>
-                <h2 className="font-display text-2xl font-bold tracking-tight">{item.title}</h2>
-                <p className="leading-relaxed text-steel">{item.body}</p>
-              </li>
-            ))}
-          </ol>
-          <p className="mt-8 max-w-xl text-sm text-steel">
-            Only addresses ending in @stu.manit.ac.in can sign in. Your information is visible to admins and assigned
-            interviewers only — see the{" "}
-            <Link href="/privacy" className="font-medium text-signal hover:underline">
-              privacy page
-            </Link>
-            .
+        <Container className="max-w-2xl space-y-8">
+          <dl className="divide-y divide-line border-y border-line">
+            <div className="grid gap-1 py-4 sm:grid-cols-[10rem_1fr]">
+              <dt className="eyebrow">Email</dt>
+              <dd className="text-ink">{user.email}</dd>
+            </div>
+            <div className="grid gap-1 py-4 sm:grid-cols-[10rem_1fr]">
+              <dt className="eyebrow">Roll number</dt>
+              <dd className="font-mono text-ink">{user.rollNumber ?? "—"}</dd>
+            </div>
+            <div className="grid gap-1 py-4 sm:grid-cols-[10rem_1fr]">
+              <dt className="eyebrow">Role</dt>
+              <dd className="capitalize text-ink">{user.role}</dd>
+            </div>
+            <div className="grid gap-1 py-4 sm:grid-cols-[10rem_1fr]">
+              <dt className="eyebrow">Year</dt>
+              <dd className="text-ink">{user.year ?? "Not set"}</dd>
+            </div>
+            <div className="grid gap-1 py-4 sm:grid-cols-[10rem_1fr]">
+              <dt className="eyebrow">Branch</dt>
+              <dd className="text-ink">{user.branch ?? "Not set"}</dd>
+            </div>
+            <div className="grid gap-1 py-4 sm:grid-cols-[10rem_1fr]">
+              <dt className="eyebrow">Phone</dt>
+              <dd className="text-ink">{user.phone ?? "Not set"}</dd>
+            </div>
+          </dl>
+          <p className="text-sm text-mute">
+            Hiring stages, RSVPs, and pathway toggles land in the next milestones.
+            See{" "}
+            <Link href="/privacy" className="text-ember hover:underline">
+              privacy
+            </Link>{" "}
+            for what the society stores.
           </p>
         </Container>
       </section>
