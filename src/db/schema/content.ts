@@ -77,6 +77,7 @@ export const posts = pgTable(
     excerpt: text("excerpt").notNull().default(""),
     body: text("body").notNull().default(""),
     coverPublicId: text("cover_public_id"),
+    authorName: text("author_name").notNull().default(""),
     authorId: text("author_id").references(() => teamMembers.id, {
       onDelete: "set null",
     }),

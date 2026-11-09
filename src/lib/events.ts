@@ -81,15 +81,25 @@ export async function getAdminEvent(id: string): Promise<EventItem | null> {
   return row ? mapRow(row) : null;
 }
 
+function seedUpcoming(now: Date) {
+  return withSeedIds(seedEvents)
+    .filter((e) => e.status === "published" && new Date(e.endsAt) > now)
+    .sort(
+      (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
+    );
+}
+
+function seedPast() {
+  return withSeedIds(seedEvents)
+    .filter((e) => e.status === "past")
+    .sort(
+      (a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime(),
+    );
+}
+
 export async function getUpcomingEvents(now = new Date()): Promise<EventItem[]> {
   const db = getDb();
-  if (!db) {
-    return withSeedIds(seedEvents)
-      .filter((e) => e.status === "published" && new Date(e.endsAt) > now)
-      .sort(
-        (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
-      );
-  }
+  if (!db) return seedUpcoming(now);
 
   const rows = await db
     .select()
@@ -98,25 +108,21 @@ export async function getUpcomingEvents(now = new Date()): Promise<EventItem[]> 
       and(eq(eventsTable.status, "published"), gt(eventsTable.endsAt, now)),
     )
     .orderBy(asc(eventsTable.startsAt));
-  return rows.map(mapRow);
+  const mapped = rows.map(mapRow);
+  return mapped.length > 0 ? mapped : seedUpcoming(now);
 }
 
 export async function getPastEvents(): Promise<EventItem[]> {
   const db = getDb();
-  if (!db) {
-    return withSeedIds(seedEvents)
-      .filter((e) => e.status === "past")
-      .sort(
-        (a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime(),
-      );
-  }
+  if (!db) return seedPast();
 
   const rows = await db
     .select()
     .from(eventsTable)
     .where(eq(eventsTable.status, "past"))
     .orderBy(desc(eventsTable.startsAt));
-  return rows.map(mapRow);
+  const mapped = rows.map(mapRow);
+  return mapped.length > 0 ? mapped : seedPast();
 }
 
 export async function getNextEvent(now = new Date()) {

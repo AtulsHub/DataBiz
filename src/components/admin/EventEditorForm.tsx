@@ -167,16 +167,21 @@ export function EventEditorForm({ event }: Props) {
             className={inputClass}
           />
         </Field>
-        <Field id="status" label="Status" required>
+        <Field
+          id="status"
+          label="Status"
+          required
+          hint="Draft stays private (public URL 404s). Published opens /events/[slug]."
+        >
           <select
             id="status"
             name="status"
             defaultValue={event?.status ?? "draft"}
             className={inputClass}
           >
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="past">Past</option>
+            <option value="draft">Draft — not public</option>
+            <option value="published">Published — live on /events</option>
+            <option value="past">Past — recap URL</option>
           </select>
         </Field>
       </div>
@@ -222,14 +227,20 @@ export function EventEditorForm({ event }: Props) {
         />
       </Field>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" variant="ember" disabled={pending}>
           {pending ? "Saving…" : event ? "Save event" : "Create event"}
         </Button>
-        {event ? (
+        {event && event.status !== "draft" ? (
           <Button href={`/events/${event.slug}`} variant="ghost">
             View public page
           </Button>
+        ) : event ? (
+          <p className="text-sm text-mute">
+            Set status to <span className="font-medium text-ink">Published</span>{" "}
+            and save to open{" "}
+            <span className="font-mono text-xs">/events/{event.slug}</span>.
+          </p>
         ) : (
           <Link href="/admin/events" className="text-sm text-mute hover:text-ink">
             Cancel

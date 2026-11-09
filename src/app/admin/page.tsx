@@ -4,6 +4,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Container } from "@/components/ui/Container";
 import { isDatabaseConfigured } from "@/db";
+import { countPendingAlumni } from "@/lib/alumni";
 import { getUpcomingEvents, isEventsDbReady } from "@/lib/events";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ async function AdminHomeContent() {
   const upcoming = isEventsDbReady()
     ? await getUpcomingEvents(new Date())
     : [];
+  const pendingAlumni = await countPendingAlumni();
 
   return (
     <div className="mt-10 grid gap-4 sm:grid-cols-3">
@@ -25,14 +27,14 @@ async function AdminHomeContent() {
           href: undefined as string | undefined,
         },
         {
-          label: "Open drive",
-          value: "—",
-          href: undefined,
-        },
-        {
           label: "Upcoming events",
           value: String(upcoming.length),
           href: "/admin/events",
+        },
+        {
+          label: "Pending alumni",
+          value: String(pendingAlumni),
+          href: "/admin/alumni",
         },
       ].map((card) => {
         const inner = (
@@ -71,8 +73,7 @@ export default function AdminHomePage() {
         Semester desk
       </h1>
       <p className="mt-3 max-w-2xl text-mute leading-relaxed">
-        Publish events, posts, pathways, and run drives from here. Events and
-        signed poster uploads are live; the other editors ship next.
+        Publish events and posts, approve alumni, and run drives from here.
       </p>
       <Suspense
         fallback={

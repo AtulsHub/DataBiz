@@ -6,7 +6,7 @@ import { HomePathways } from "@/components/home/HomePathways";
 import { HomeMission } from "@/components/home/HomeMission";
 import { HomeContactStrip } from "@/components/home/HomeContactStrip";
 import { getNextEvent, getPastEvents } from "@/lib/events";
-import { getPublishedPosts } from "@/content/posts";
+import { getPublishedPosts } from "@/lib/posts";
 import { getLatestEpisode } from "@/content/episodes";
 import { getPublishedPathways } from "@/content/pathways";
 import { getOpenDrive } from "@/content/drives";
@@ -16,7 +16,8 @@ async function HomeContent() {
   const nextEvent = await getNextEvent();
   const pastEvents = await getPastEvents();
   const pastEvent = pastEvents[0] ?? null;
-  const latestPost = getPublishedPosts()[0] ?? null;
+  const publishedPosts = await getPublishedPosts();
+  const latestPost = publishedPosts[0] ?? null;
   const latestEpisode = getLatestEpisode();
   const pathways = getPublishedPathways().slice(0, 3);
   const openDrive = getOpenDrive();

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { connection } from "next/server";
 import Link from "next/link";
-import { getPublishedPosts } from "@/content/posts";
+import { getPublishedPosts } from "@/lib/posts";
 import { formatDate, readingTime } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -12,8 +14,9 @@ export const metadata: Metadata = {
   description: "Writing from DataBiz members on data, ML, and AI.",
 };
 
-export default function BlogPage() {
-  const posts = getPublishedPosts();
+async function BlogContent() {
+  await connection();
+  const posts = await getPublishedPosts();
 
   return (
     <>
@@ -41,10 +44,15 @@ export default function BlogPage() {
                       className="group grid gap-4 py-9 transition-colors hover:bg-paper-elevated/80 lg:grid-cols-[12rem_1fr] lg:gap-10 lg:px-2"
                     >
                       <div className="font-mono text-xs uppercase tracking-[0.12em] text-steel">
-                        <time dateTime={post.publishedAt} className="text-signal">
+                        <time
+                          dateTime={post.publishedAt}
+                          className="text-signal"
+                        >
                           {formatDate(post.publishedAt)}
                         </time>
-                        <p className="mt-1">{readingTime(post.body)} min read</p>
+                        <p className="mt-1">
+                          {readingTime(post.body)} min read
+                        </p>
                         <p className="mt-1">By {post.author}</p>
                       </div>
                       <div>
@@ -54,7 +62,10 @@ export default function BlogPage() {
                         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-steel">
                           {post.excerpt}
                         </p>
-                        <ul className="mt-4 flex flex-wrap gap-2" aria-label="Tags">
+                        <ul
+                          className="mt-4 flex flex-wrap gap-2"
+                          aria-label="Tags"
+                        >
                           {post.tags.map((tag) => (
                             <li
                               key={tag}
@@ -74,5 +85,17 @@ export default function BlogPage() {
         </Container>
       </section>
     </>
+  );
+}
+
+export default function BlogPage() {
+  return (
+    <Suspense
+      fallback={
+        <PageHero index="05" label="Blog" title="Loading posts…" />
+      }
+    >
+      <BlogContent />
+    </Suspense>
   );
 }

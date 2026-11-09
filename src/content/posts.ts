@@ -90,15 +90,3 @@ Quantum Machine Learning is not yet ready for large scale real world data applic
   },
 ];
 
-export function getPublishedPosts() {
-  return posts
-    .filter((p) => p.status === "published")
-    .sort(
-      (a, b) =>
-        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
-    );
-}
-
-export function getPost(slug: string) {
-  return getPublishedPosts().find((p) => p.slug === slug);
-}
