@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Linked Field — cool stone, charcoal ink, ember nodes */
+  --paper: #f2f3f5;
+  --paper-elevated: #ffffff;
+  --ink: #111113;
+  --ink-soft: #2c2e33;
+  --mute: #6b707a;
+  --line: #d9dde3;
+  --line-strong: #b4bac4;
+  --ember: #e8482e;
+  --ember-deep: #c23a24;
+  --ember-soft: #ffe4de;
+  --void: #0c0d10;
+  --void-soft: #17181c;
+  --danger: #b42318;
+  --header-h: 4rem;
+  --gutter: clamp(1.25rem, 4.5vw, 3.25rem);
+  --measure: 72rem;
+  --glow: color-mix(in srgb, var(--ember) 12%, transparent);
+}
+
+.dark {
+  --paper: #0c0d10;
+  --paper-elevated: #16171b;
+  --ink: #f2f3f5;
+  --ink-soft: #c8ccd4;
+  --mute: #8b919c;
+  --line: #2a2c33;
+  --line-strong: #3f434d;
+  --ember: #ff6b4a;
+  --ember-deep: #e8482e;
+  --ember-soft: #3a1a14;
+  --void: #050506;
+  --void-soft: #121318;
+  --danger: #f97066;
+  --glow: color-mix(in srgb, var(--ember) 18%, transparent);
+}
+
+@layer base {
+  * {
+    @apply border-line;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--ember);
+    color: #fff;
+  }
+
+  a {
+    color: inherit;
+    text-underline-offset: 0.2em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ember);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply font-mono text-[0.68rem] uppercase tracking-[0.2em] text-mute;
+  }
+
+  .link-ember {
+    @apply text-ember underline-offset-4 transition-colors hover:underline;
+  }
+
+  .hairline {
+    height: 1px;
+    background: var(--line);
+  }
+
+  .prose-databiz {
+    font-family: var(--font-literata), Georgia, serif;
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: var(--ink-soft);
+  }
+
+  .prose-databiz h2 {
+    font-family: var(--font-sora), sans-serif;
+    font-size: clamp(1.45rem, 2.4vw, 1.75rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-top: 2.4rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .prose-databiz h3 {
+    font-family: var(--font-sora), sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 1.85rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .prose-databiz p {
+    margin-bottom: 1.15rem;
+  }
+
+  .prose-databiz ul {
+    list-style: disc;
+    padding-left: 1.25rem;
+    margin-bottom: 1.15rem;
+  }
+
+  .prose-databiz li {
+    margin-bottom: 0.4rem;
+  }
+
+  .prose-databiz strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+}
+
+@layer utilities {
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(22px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-rise {
+    animation: rise 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-rise-delay {
+    animation: rise 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .field-wash {
+    background:
+      radial-gradient(ellipse 55% 45% at 85% 15%, var(--glow), transparent 60%),
+      var(--paper);
+  }
+}
