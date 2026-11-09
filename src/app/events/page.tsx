@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { getPastEvents, getUpcomingEvents, type EventItem } from "@/content/events";
+import { getPastEvents, getUpcomingEvents, type EventItem } from "@/lib/events";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { Container } from "@/components/ui/Container";
 import { DeskLabel } from "@/components/ui/DeskLabel";
@@ -54,8 +54,8 @@ function EventRow({ event, past }: { event: EventItem; past?: boolean }) {
 
 async function EventsContent() {
   await connection();
-  const upcoming = getUpcomingEvents();
-  const past = getPastEvents();
+  const upcoming = await getUpcomingEvents();
+  const past = await getPastEvents();
 
   return (
     <>

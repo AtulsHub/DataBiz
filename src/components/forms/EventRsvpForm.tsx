@@ -1,93 +1,178 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState } from "react";
+import { registerForEvent, type ActionResult } from "@/app/actions/events";
 import { Button } from "@/components/ui/Button";
 import { Field, inputClass } from "./Field";
 import { site } from "@/content/site";
 
 type Props = {
+  eventId: string;
   eventTitle: string;
   eventSlug: string;
+  defaults?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    year?: string;
+    branch?: string;
+  };
+  databaseReady: boolean;
 };
 
-type Errors = Partial<Record<"name" | "email", string>>;
+const initial: ActionResult = { ok: false };
 
-export function EventRsvpForm({ eventTitle, eventSlug }: Props) {
-  const [errors, setErrors] = useState<Errors>({});
-  const [sent, setSent] = useState(false);
+export function EventRsvpForm({
+  eventId,
+  eventTitle,
+  eventSlug,
+  defaults,
+  databaseReady,
+}: Props) {
+  const [state, formAction, pending] = useActionState(registerForEvent, initial);
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const name = String(data.get("name") ?? "").trim();
-    const email = String(data.get("email") ?? "").trim();
-    const rollNumber = String(data.get("roll") ?? "").trim();
-
-    const next: Errors = {};
-    if (!name) next.name = "Enter your name.";
-    if (!/^\S+@\S+\.\S+$/.test(email)) next.email = "Enter a valid email address.";
-    setErrors(next);
-    if (Object.keys(next).length > 0) return;
-
-    // RSVP storage lands with the backend; until then the RSVP is sent as an email.
-    const subject = encodeURIComponent(`RSVP: ${eventTitle}`);
-    const body = encodeURIComponent(
-      `Event: ${eventTitle} (${eventSlug})\nName: ${name}\nEmail: ${email}${
-        rollNumber ? `\nRoll number: ${rollNumber}` : ""
-      }`,
+  if (!databaseReady) {
+    return (
+      <MailtoRsvpFallback
+        eventTitle={eventTitle}
+        eventSlug={eventSlug}
+        defaults={defaults}
+      />
     );
-    window.location.href = `mailto:${site.email}?subject=${subject}&body=${body}`;
-    setSent(true);
+  }
+
+  if (state.ok) {
+    return (
+      <p className="text-sm leading-relaxed text-signal-deep" role="status">
+        You&apos;re registered. Check your inbox for a confirmation — we&apos;ll
+        also remind you the day before.
+      </p>
+    );
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-5" aria-label={`RSVP for ${eventTitle}`}>
-      <Field id="rsvp-name" label="Name" required error={errors.name}>
-        <input
-          id="rsvp-name"
-          name="name"
-          type="text"
-          autoComplete="name"
+    <form
+      action={formAction}
+      noValidate
+      className="space-y-4"
+      aria-label={`RSVP for ${eventTitle}`}
+    >
+      <input type="hidden" name="eventId" value={eventId} />
+      {state.error ? (
+        <p className="text-xs text-danger" role="alert">
+          {state.error}
+        </p>
+      ) : null}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field
+          id="rsvp-first"
+          label="First name"
           required
-          aria-invalid={Boolean(errors.name)}
-          aria-describedby={errors.name ? "rsvp-name-error" : undefined}
-          className={inputClass}
-        />
-      </Field>
-      <Field id="rsvp-email" label="Email" required error={errors.email}>
+          error={state.fieldErrors?.firstName}
+        >
+          <input
+            id="rsvp-first"
+            name="firstName"
+            required
+            defaultValue={defaults?.firstName}
+            className={inputClass}
+          />
+        </Field>
+        <Field
+          id="rsvp-last"
+          label="Last name"
+          required
+          error={state.fieldErrors?.lastName}
+        >
+          <input
+            id="rsvp-last"
+            name="lastName"
+            required
+            defaultValue={defaults?.lastName}
+            className={inputClass}
+          />
+        </Field>
+      </div>
+      <Field
+        id="rsvp-email"
+        label="Email"
+        required
+        error={state.fieldErrors?.email}
+      >
         <input
           id="rsvp-email"
           name="email"
           type="email"
-          autoComplete="email"
           required
-          aria-invalid={Boolean(errors.email)}
-          aria-describedby={errors.email ? "rsvp-email-error" : undefined}
+          defaultValue={defaults?.email}
           className={inputClass}
         />
       </Field>
-      <Field
-        id="rsvp-roll"
-        label="Roll number"
-        hint="MANIT students can add a roll number; guests can skip this."
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="rsvp-year" label="Year" required error={state.fieldErrors?.year}>
+          <input
+            id="rsvp-year"
+            name="year"
+            required
+            placeholder="e.g. 2nd year"
+            defaultValue={defaults?.year}
+            className={inputClass}
+          />
+        </Field>
+        <Field
+          id="rsvp-branch"
+          label="Branch"
+          required
+          error={state.fieldErrors?.branch}
+        >
+          <input
+            id="rsvp-branch"
+            name="branch"
+            required
+            placeholder="e.g. CSE"
+            defaultValue={defaults?.branch}
+            className={inputClass}
+          />
+        </Field>
+      </div>
+      <Button
+        type="submit"
+        variant="signal"
+        size="md"
+        className="w-full"
+        disabled={pending}
       >
-        <input
-          id="rsvp-roll"
-          name="roll"
-          type="text"
-          autoComplete="off"
-          aria-describedby="rsvp-roll-hint"
-          className={inputClass}
-        />
-      </Field>
-      <Button type="submit" variant="signal" size="md" className="w-full">
-        Reserve a seat
+        {pending ? "Saving…" : "Reserve a seat"}
       </Button>
-      {sent ? (
-        <p className="text-sm text-signal-deep" role="status">
-          Your mail app should open with the RSVP ready to send. If it does not, write to {site.email}.
-        </p>
-      ) : null}
     </form>
+  );
+}
+
+function MailtoRsvpFallback({
+  eventTitle,
+  eventSlug,
+  defaults,
+}: {
+  eventTitle: string;
+  eventSlug: string;
+  defaults?: Props["defaults"];
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-xs leading-relaxed text-mute">
+        Live RSVP storage needs Neon connected. Until then, send a quick email.
+      </p>
+      <Button
+        href={`mailto:${site.email}?subject=${encodeURIComponent(`RSVP: ${eventTitle}`)}&body=${encodeURIComponent(
+          `Event: ${eventTitle} (${eventSlug})\nName: ${defaults?.firstName ?? ""} ${defaults?.lastName ?? ""}\nEmail: ${defaults?.email ?? ""}\nYear: ${defaults?.year ?? ""}\nBranch: ${defaults?.branch ?? ""}`,
+        )}`}
+        external
+        variant="signal"
+        size="md"
+        className="w-full"
+      >
+        Email RSVP
+      </Button>
+    </div>
   );
 }

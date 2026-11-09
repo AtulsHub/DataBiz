@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { connection } from "next/server";
 import { requireAdmin } from "@/lib/session";
 import { Container } from "@/components/ui/Container";
 
@@ -9,11 +11,8 @@ const links = [
   { href: "/admin/users", label: "Users" },
 ] as const;
 
-export default async function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+async function AdminShell({ children }: { children: React.ReactNode }) {
+  await connection();
   const session = await requireAdmin();
 
   return (
@@ -44,5 +43,25 @@ export default async function AdminLayout({
       </div>
       {children}
     </div>
+  );
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-full border-b border-line bg-paper">
+          <Container className="py-12 text-sm text-mute">
+            Checking admin session…
+          </Container>
+        </div>
+      }
+    >
+      <AdminShell>{children}</AdminShell>
+    </Suspense>
   );
 }

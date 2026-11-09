@@ -5,7 +5,7 @@ import { HomeIndex } from "@/components/home/HomeIndex";
 import { HomePathways } from "@/components/home/HomePathways";
 import { HomeMission } from "@/components/home/HomeMission";
 import { HomeContactStrip } from "@/components/home/HomeContactStrip";
-import { getNextEvent, getPastEvents } from "@/content/events";
+import { getNextEvent, getPastEvents } from "@/lib/events";
 import { getPublishedPosts } from "@/content/posts";
 import { getLatestEpisode } from "@/content/episodes";
 import { getPublishedPathways } from "@/content/pathways";
@@ -13,8 +13,9 @@ import { getOpenDrive } from "@/content/drives";
 
 async function HomeContent() {
   await connection();
-  const nextEvent = getNextEvent();
-  const pastEvent = getPastEvents()[0] ?? null;
+  const nextEvent = await getNextEvent();
+  const pastEvents = await getPastEvents();
+  const pastEvent = pastEvents[0] ?? null;
   const latestPost = getPublishedPosts()[0] ?? null;
   const latestEpisode = getLatestEpisode();
   const pathways = getPublishedPathways().slice(0, 3);

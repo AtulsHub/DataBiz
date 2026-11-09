@@ -1,4 +1,4 @@
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getAuth, isAuthConfigured } from "@/lib/auth";
 import { canAccessAdmin, isRole, type Role } from "@/lib/roles";
@@ -19,8 +19,20 @@ export async function getSession() {
   const auth = getAuth();
   if (!auth) return null;
 
+  // Touch cookies() so Cache Components treats this as request-time auth.
+  const cookieStore = await cookies();
+  const headerStore = await headers();
+  const requestHeaders = new Headers(headerStore);
+  const cookieHeader = cookieStore
+    .getAll()
+    .map((entry) => `${entry.name}=${entry.value}`)
+    .join("; ");
+  if (!requestHeaders.get("cookie") && cookieHeader) {
+    requestHeaders.set("cookie", cookieHeader);
+  }
+
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: requestHeaders,
   });
 
   if (!session) return null;

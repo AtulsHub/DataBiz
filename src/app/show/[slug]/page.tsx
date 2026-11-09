@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getEpisode, getPublishedEpisodes } from "@/content/episodes";
-import { getEvent } from "@/content/events";
+import { getEventBySlug } from "@/lib/events";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -28,7 +28,9 @@ export default async function EpisodePage({ params }: Props) {
   const episode = getEpisode(slug);
   if (!episode) notFound();
 
-  const event = episode.eventSlug ? getEvent(episode.eventSlug) : undefined;
+  const event = episode.eventSlug
+    ? await getEventBySlug(episode.eventSlug)
+    : undefined;
 
   return (
     <>

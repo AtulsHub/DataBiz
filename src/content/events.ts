@@ -1,4 +1,7 @@
+export type EventStatus = "draft" | "published" | "past";
+
 export type EventItem = {
+  id?: string;
   slug: string;
   title: string;
   summary: string;
@@ -7,15 +10,21 @@ export type EventItem = {
   meetingUrl?: string;
   startsAt: string;
   endsAt: string;
-  status: "draft" | "published" | "past";
+  capacity?: number | null;
+  rsvpDeadline?: string;
+  status: EventStatus;
   recapBody?: string;
   recordingUrl?: string;
   posterUrl?: string;
+  posterPublicId?: string;
   episodeSlug?: string;
+  template?: "default" | "fest";
 };
 
+/** Seed catalog used when DATABASE_URL is unset. */
 export const events: EventItem[] = [
   {
+    id: "seed-databrew-consultant",
     slug: "the-databrew-show-with-consultant",
     title: "The DataBrew Show with Consultant",
     summary:
@@ -29,7 +38,9 @@ Expect practical framing: how to think with incomplete data, how credibility com
     status: "past",
     posterUrl:
       "https://res.cloudinary.com/dvil2pqgj/image/upload/v1771598566/databiz/xvnlv5c26zw1skfccmzn.jpg",
+    posterPublicId: "databiz/xvnlv5c26zw1skfccmzn",
     episodeSlug: "databrew-rishabh-chhabra",
+    template: "default",
     recapBody: `We sat with Rishabh Chhabra (Consultant, World Bank Group; previously Deloitte India, Audit) for a session on thinking at scale.
 
 Themes that stuck with the room: moving from compliance to impact, bridging finance and analytics, and building a career that stays curious without losing rigor.
@@ -37,27 +48,3 @@ Themes that stuck with the room: moving from compliance to impact, bridging fina
 Recording embed will appear on the episode page once the core publishes it.`,
   },
 ];
-
-export function getUpcomingEvents(now = new Date()) {
-  return events
-    .filter((e) => e.status === "published" && new Date(e.endsAt) > now)
-    .sort(
-      (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
-    );
-}
-
-export function getPastEvents() {
-  return events
-    .filter((e) => e.status === "past")
-    .sort(
-      (a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime(),
-    );
-}
-
-export function getEvent(slug: string) {
-  return events.find((e) => e.slug === slug && e.status !== "draft");
-}
-
-export function getNextEvent(now = new Date()) {
-  return getUpcomingEvents(now)[0] ?? null;
-}

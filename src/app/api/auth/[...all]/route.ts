@@ -1,23 +1,27 @@
+import { toNextJsHandler } from "better-auth/next-js";
 import { getAuth, isAuthConfigured } from "@/lib/auth";
 
-async function handler(request: Request) {
+function handlers() {
   if (!isAuthConfigured()) {
-    return Response.json(
-      {
-        error:
-          "Auth is not configured yet. Set DATABASE_URL, BETTER_AUTH_SECRET, and BETTER_AUTH_URL in .env.local.",
-      },
-      { status: 503 },
-    );
+    const unavailable = async () =>
+      Response.json(
+        {
+          error:
+            "Auth is not configured yet. Set DATABASE_URL, BETTER_AUTH_SECRET, and BETTER_AUTH_URL in .env.local.",
+        },
+        { status: 503 },
+      );
+    return { GET: unavailable, POST: unavailable };
   }
 
   const auth = getAuth();
   if (!auth) {
-    return Response.json({ error: "Auth unavailable" }, { status: 503 });
+    const unavailable = async () =>
+      Response.json({ error: "Auth unavailable" }, { status: 503 });
+    return { GET: unavailable, POST: unavailable };
   }
 
-  return auth.handler(request);
+  return toNextJsHandler(auth);
 }
 
-export const GET = handler;
-export const POST = handler;
+export const { GET, POST } = handlers();

@@ -27,6 +27,13 @@ export function LoginForm() {
   const [status, setStatus] = useState<AuthStatus | null>(null);
 
   useEffect(() => {
+    const err = searchParams.get("error");
+    if (err === "INVALID_TOKEN" || err === "link") {
+      setError(
+        "That sign-in link is invalid or was already used. Request a fresh one.",
+      );
+    }
+
     fetch("/api/auth/status")
       .then((r) => r.json())
       .then((data: AuthStatus) => setStatus(data))
@@ -39,7 +46,7 @@ export function LoginForm() {
           domain: allowedEmailDomain(),
         }),
       );
-  }, []);
+  }, [searchParams]);
 
   const domain = status?.domain ? `@${status.domain}` : "@stu.manit.ac.in";
 
@@ -117,9 +124,10 @@ export function LoginForm() {
       {sent ? (
         <p className="text-sm leading-relaxed text-mute" role="status">
           Check your inbox for a one-time link. It expires in 15 minutes.
-          {!status?.email
-            ? " (Email provider is not configured — in development the link may appear in the server log.)"
-            : null}
+          With the Resend test sender, open the magic link printed in the{" "}
+          <strong className="font-medium text-ink">dev server terminal</strong>{" "}
+          once, on <span className="font-mono text-ink">localhost:3000</span>{" "}
+          (not 127.0.0.1). Do not reuse an old link.
         </p>
       ) : null}
       {status && !status.configured ? (

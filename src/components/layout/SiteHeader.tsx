@@ -58,7 +58,9 @@ export function SiteHeader() {
         >
           {navPrimary.map((item) => {
             const active =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+              item.href === "/"
+                ? pathname === "/"
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
@@ -79,6 +81,14 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <Button
+            href="/account"
+            variant="ghost"
+            size="sm"
+            className="hidden sm:inline-flex"
+          >
+            Account
+          </Button>
           <Button href="/join" variant="ember" size="sm" className="hidden sm:inline-flex">
             Join
           </Button>
@@ -105,7 +115,7 @@ export function SiteHeader() {
               ...navPrimary,
               { href: "/team", label: "Team" },
               { href: "/join", label: "Join" },
-              { href: "/login", label: "Sign in" },
+              { href: "/account", label: "Account" },
               { href: "/contact", label: "Contact" },
             ].map((item) => (
               <Link

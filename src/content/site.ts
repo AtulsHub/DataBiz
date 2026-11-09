@@ -42,6 +42,7 @@ export const site = {
 
 /** Primary chrome — DataBrew is an event format, not a top-level destination. */
 export const navPrimary = [
+  { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/events", label: "Events" },
   { href: "/blog", label: "Blog" },
@@ -62,6 +63,7 @@ export const footerCols = [
   {
     title: "Explore",
     links: [
+      { href: "/", label: "Home" },
       { href: "/about", label: "About" },
       { href: "/team", label: "Team" },
       { href: "/work", label: "Work" },

@@ -1,0 +1,215 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
+import {
+  listMyRegistrations,
+  type MyRegistration,
+} from "@/app/actions/account";
+import { formatDateTime } from "@/lib/utils";
+import { Button } from "@/components/ui/Button";
+import { Container } from "@/components/ui/Container";
+import { DeskLabel } from "@/components/ui/DeskLabel";
+import { PageHero } from "@/components/ui/PageHero";
+import { ProfileForm } from "@/components/account/ProfileForm";
+import { SignOutButton } from "@/components/account/SignOutButton";
+
+export function AccountPanel() {
+  const { data, isPending, error } = authClient.useSession();
+  const [registrations, setRegistrations] = useState<MyRegistration[] | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!data?.user) {
+      setRegistrations(null);
+      return;
+    }
+    let cancelled = false;
+    void listMyRegistrations().then((rows) => {
+      if (!cancelled) setRegistrations(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [data?.user]);
+
+  if (isPending) {
+    return (
+      <PageHero
+        label="Account"
+        title="Loading your account…"
+        description="Checking your session."
+      />
+    );
+  }
+
+  if (error) {
+    return (
+      <PageHero
+        label="Account"
+        title="Could not load session."
+        description={error.message || "Try signing in again."}
+      >
+        <div className="mt-6">
+          <Button href="/login?next=/account" variant="primary" size="md">
+            Sign in
+          </Button>
+        </div>
+      </PageHero>
+    );
+  }
+
+  if (!data?.user) {
+    return (
+      <>
+        <PageHero
+          label="Account"
+          title="You're not signed in."
+          description="Your account is a private page for MANIT students. Sign in with your college email to see applications, RSVPs, and pathway progress."
+        >
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button href="/login?next=/account" variant="primary" size="md">
+              Sign in
+            </Button>
+            <Button href="/faq" variant="ghost" size="md">
+              Read the FAQ
+            </Button>
+          </div>
+        </PageHero>
+      </>
+    );
+  }
+
+  const user = data.user as {
+    name?: string | null;
+    email: string;
+    rollNumber?: string | null;
+    role?: string | null;
+    year?: string | null;
+    branch?: string | null;
+    phone?: string | null;
+  };
+
+  return (
+    <>
+      <PageHero
+        label="Account"
+        title={user.name?.trim() || "Your account"}
+        description="Edit your profile details here. Applications, RSVPs, and pathway progress also live on this page as those features ship."
+      >
+        <div className="mt-6 flex flex-wrap gap-3">
+          {user.role === "admin" ? (
+            <Button href="/admin" variant="ember" size="md">
+              Open admin
+            </Button>
+          ) : null}
+          <SignOutButton />
+        </div>
+      </PageHero>
+
+      <section className="py-16 sm:py-20">
+        <Container className="grid max-w-5xl gap-14 lg:grid-cols-[1fr_1.1fr]">
+          <div>
+            <DeskLabel>Identity</DeskLabel>
+            <dl className="mt-5 divide-y divide-line border-y border-line">
+              <div className="grid gap-1 py-4 sm:grid-cols-[9rem_1fr]">
+                <dt className="eyebrow">Email</dt>
+                <dd className="text-ink">{user.email}</dd>
+              </div>
+              <div className="grid gap-1 py-4 sm:grid-cols-[9rem_1fr]">
+                <dt className="eyebrow">Roll number</dt>
+                <dd className="font-mono text-ink">{user.rollNumber ?? "—"}</dd>
+              </div>
+              <div className="grid gap-1 py-4 sm:grid-cols-[9rem_1fr]">
+                <dt className="eyebrow">Role</dt>
+                <dd className="capitalize text-ink">{user.role ?? "applicant"}</dd>
+              </div>
+            </dl>
+            <p className="mt-4 text-sm text-mute">
+              Email and roll number come from your MANIT address and can&apos;t
+              be edited here. An admin sets role.
+            </p>
+          </div>
+
+          <div>
+            <DeskLabel>Profile</DeskLabel>
+            <p className="mt-3 text-sm text-mute">
+              Year, branch, and phone are used for event RSVPs and drive
+              applications.
+            </p>
+            <div className="mt-6">
+              <ProfileForm
+                profile={{
+                  name: user.name,
+                  year: user.year,
+                  branch: user.branch,
+                  phone: user.phone,
+                }}
+              />
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      <section className="border-t border-line py-16 sm:py-20">
+        <Container className="max-w-5xl">
+          <DeskLabel>Your RSVPs</DeskLabel>
+          <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight">
+            Event registrations
+          </h2>
+          <div className="mt-8">
+            {registrations === null ? (
+              <p className="text-sm text-mute">Loading registrations…</p>
+            ) : registrations.length === 0 ? (
+              <p className="text-sm text-mute">
+                No RSVPs yet.{" "}
+                <Link href="/events" className="text-ember hover:underline">
+                  Browse events
+                </Link>
+                .
+              </p>
+            ) : (
+              <ul className="divide-y divide-line border-y border-line">
+                {registrations.map((row) => (
+                  <li
+                    key={row.id}
+                    className="flex flex-wrap items-baseline justify-between gap-3 py-4"
+                  >
+                    <div>
+                      <Link
+                        href={`/events/${row.event.slug}`}
+                        className="font-medium text-ink hover:text-ember"
+                      >
+                        {row.event.title}
+                      </Link>
+                      <p className="mt-1 font-mono text-xs text-mute">
+                        {formatDateTime(row.event.startsAt)} · {row.status}
+                      </p>
+                    </div>
+                    <Button
+                      href={`/events/${row.event.slug}`}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      Open
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <p className="mt-8 text-sm text-mute">
+            Drive applications and pathway progress arrive in later milestones.
+            See{" "}
+            <Link href="/privacy" className="text-ember hover:underline">
+              privacy
+            </Link>{" "}
+            for what the society stores.
+          </p>
+        </Container>
+      </section>
+    </>
+  );
+}

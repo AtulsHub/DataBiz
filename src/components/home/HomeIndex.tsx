@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import type { EventItem } from "@/content/events";
+import type { EventItem } from "@/lib/events";
 import type { Post } from "@/content/posts";
 import type { Episode } from "@/content/episodes";
 import { Container } from "@/components/ui/Container";
