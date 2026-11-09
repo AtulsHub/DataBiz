@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getEpisode, getPublishedEpisodes } from "@/content/episodes";
 import { getEventBySlug } from "@/lib/events";
@@ -23,19 +24,38 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: episode.title, description: episode.summary };
 }
 
+async function RelatedEvent({ eventSlug }: { eventSlug: string }) {
+  const event = await getEventBySlug(eventSlug);
+  if (!event) return null;
+
+  return (
+    <section aria-labelledby="event-heading">
+      <DeskLabel>
+        <span id="event-heading">Recorded live at</span>
+      </DeskLabel>
+      <p className="mt-3 font-medium">{event.title}</p>
+      <div className="mt-4">
+        <Button href={`/events/${event.slug}`} variant="ghost" size="sm">
+          Event page
+        </Button>
+      </div>
+    </section>
+  );
+}
+
 export default async function EpisodePage({ params }: Props) {
   const { slug } = await params;
   const episode = getEpisode(slug);
   if (!episode) notFound();
 
-  const event = episode.eventSlug
-    ? await getEventBySlug(episode.eventSlug)
-    : undefined;
-
   return (
     <>
       <PageHero
-        index={formatDate(episode.publishedAt, { day: "numeric", month: "short", year: "numeric" })}
+        index={formatDate(episode.publishedAt, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })}
         label="DataBrew episode"
         title={episode.title}
         description={episode.summary}
@@ -44,7 +64,6 @@ export default async function EpisodePage({ params }: Props) {
       <section className="py-16 sm:py-20">
         <Container className="grid gap-12 lg:grid-cols-[1fr_20rem] lg:gap-16">
           <div>
-            {/* Embed */}
             {episode.embedUrl ? (
               <div className="aspect-video overflow-hidden rounded-[var(--radius-lg)] border border-line bg-panel">
                 <iframe
@@ -63,7 +82,10 @@ export default async function EpisodePage({ params }: Props) {
                 body="The core will add the YouTube or Spotify recording here. Until then, the notes below cover the conversation."
                 action={
                   episode.externalUrl
-                    ? { href: episode.externalUrl, label: "Open on the platform" }
+                    ? {
+                        href: episode.externalUrl,
+                        label: "Open on the platform",
+                      }
                     : undefined
                 }
               />
@@ -75,10 +97,15 @@ export default async function EpisodePage({ params }: Props) {
             </div>
           </div>
 
-          <aside className="space-y-10 lg:border-l lg:border-line lg:pl-8" aria-label="Episode details">
+          <aside
+            className="space-y-10 lg:border-l lg:border-line lg:pl-8"
+            aria-label="Episode details"
+          >
             <section aria-labelledby="guests-heading">
               <DeskLabel>
-                <span id="guests-heading">{episode.guests.length === 1 ? "Guest" : "Guests"}</span>
+                <span id="guests-heading">
+                  {episode.guests.length === 1 ? "Guest" : "Guests"}
+                </span>
               </DeskLabel>
               {episode.guests.length === 0 ? (
                 <p className="mt-3 text-sm text-steel">No guests listed.</p>
@@ -86,7 +113,9 @@ export default async function EpisodePage({ params }: Props) {
                 <ul className="mt-4 space-y-5">
                   {episode.guests.map((guest) => (
                     <li key={guest.name}>
-                      <p className="font-display text-xl font-bold tracking-tight">{guest.name}</p>
+                      <p className="font-display text-xl font-bold tracking-tight">
+                        {guest.name}
+                      </p>
                       <p className="text-sm text-steel">
                         {guest.title}, {guest.organization}
                       </p>
@@ -96,18 +125,10 @@ export default async function EpisodePage({ params }: Props) {
               )}
             </section>
 
-            {event ? (
-              <section aria-labelledby="event-heading">
-                <DeskLabel>
-                  <span id="event-heading">Recorded live at</span>
-                </DeskLabel>
-                <p className="mt-3 font-medium">{event.title}</p>
-                <div className="mt-4">
-                  <Button href={`/events/${event.slug}`} variant="ghost" size="sm">
-                    Event page
-                  </Button>
-                </div>
-              </section>
+            {episode.eventSlug ? (
+              <Suspense fallback={null}>
+                <RelatedEvent eventSlug={episode.eventSlug} />
+              </Suspense>
             ) : null}
 
             <Button href="/show" variant="link">

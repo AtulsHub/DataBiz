@@ -125,34 +125,38 @@ export async function getNextEvent(now = new Date()) {
 }
 
 export async function getEventBySlug(slug: string): Promise<EventItem | null> {
+  const seedMatch =
+    withSeedIds(seedEvents).find(
+      (e) => e.slug === slug && e.status !== "draft",
+    ) ?? null;
+
   const db = getDb();
-  if (!db) {
-    return (
-      withSeedIds(seedEvents).find(
-        (e) => e.slug === slug && e.status !== "draft",
-      ) ?? null
-    );
-  }
+  if (!db) return seedMatch;
 
   const [row] = await db
     .select()
     .from(eventsTable)
     .where(and(eq(eventsTable.slug, slug), ne(eventsTable.status, "draft")))
     .limit(1);
-  return row ? mapRow(row) : null;
+  return row ? mapRow(row) : seedMatch;
 }
 
 export async function listPublicEventSlugs() {
+  const seedSlugs = seedEvents
+    .filter((e) => e.status !== "draft")
+    .map((e) => e.slug);
+
   const db = getDb();
-  if (!db) {
-    return seedEvents.filter((e) => e.status !== "draft").map((e) => e.slug);
-  }
+  if (!db) return seedSlugs;
 
   const rows = await db
     .select({ slug: eventsTable.slug })
     .from(eventsTable)
     .where(ne(eventsTable.status, "draft"));
-  return rows.map((r) => r.slug);
+  const dbSlugs = rows.map((r) => r.slug);
+
+  // Cache Components requires generateStaticParams to return at least one path.
+  return dbSlugs.length > 0 ? dbSlugs : seedSlugs;
 }
 
 export async function countRegistered(eventId: string) {

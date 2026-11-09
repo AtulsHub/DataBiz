@@ -11,6 +11,7 @@ import type { EventItem } from "@/lib/events";
 import { toDatetimeLocalValue } from "@/lib/datetime";
 import { Button } from "@/components/ui/Button";
 import { Field, inputClass, textareaClass } from "@/components/forms/Field";
+import { PosterUpload } from "@/components/admin/PosterUpload";
 
 type Props = {
   event?: EventItem;
@@ -180,31 +181,22 @@ export function EventEditorForm({ event }: Props) {
         </Field>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="template" label="Template">
-          <select
-            id="template"
-            name="template"
-            defaultValue={event?.template ?? "default"}
-            className={inputClass}
-          >
-            <option value="default">Default</option>
-            <option value="fest">Fest</option>
-          </select>
-        </Field>
-        <Field
-          id="posterPublicId"
-          label="Poster"
-          hint="Cloudinary public id or full image URL"
+      <Field id="template" label="Template">
+        <select
+          id="template"
+          name="template"
+          defaultValue={event?.template ?? "default"}
+          className={inputClass}
         >
-          <input
-            id="posterPublicId"
-            name="posterPublicId"
-            defaultValue={event?.posterPublicId ?? event?.posterUrl}
-            className={inputClass}
-          />
-        </Field>
-      </div>
+          <option value="default">Default</option>
+          <option value="fest">Fest</option>
+        </select>
+      </Field>
+
+      <PosterUpload
+        defaultPublicId={event?.posterPublicId}
+        defaultPreviewUrl={event?.posterUrl}
+      />
 
       <Field id="recordingUrl" label="Recording URL">
         <input

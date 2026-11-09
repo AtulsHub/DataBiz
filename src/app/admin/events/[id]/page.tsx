@@ -9,6 +9,8 @@ import {
   listEventRegistrations,
 } from "@/lib/events";
 
+export const instant = false;
+
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

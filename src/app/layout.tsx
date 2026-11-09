@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Sora, Literata, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -54,7 +55,9 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col bg-paper text-ink">
         <ThemeProvider>
-          <SiteHeader />
+          <Suspense fallback={<div className="h-[var(--header-h)]" aria-hidden />}>
+            <SiteHeader />
+          </Suspense>
           <main className="flex-1">{children}</main>
           <SiteFooter />
         </ThemeProvider>
