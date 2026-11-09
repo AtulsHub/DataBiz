@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { getEpisode, getPublishedEpisodes } from "@/content/episodes";
+import { connection } from "next/server";
+import {
+  getEpisodeBySlug,
+  listStaticEpisodeParams,
+} from "@/lib/episodes";
 import { getEventBySlug } from "@/lib/events";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -13,14 +17,13 @@ import { PageHero } from "@/components/ui/PageHero";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export function generateStaticParams() {
-  const params = getPublishedEpisodes().map((e) => ({ slug: e.slug }));
-  return params.length > 0 ? params : [{ slug: "no-episodes" }];
+export async function generateStaticParams() {
+  return listStaticEpisodeParams();
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const episode = getEpisode(slug);
+  const episode = await getEpisodeBySlug(slug);
   if (!episode) return { title: "Episode not found" };
   return { title: episode.title, description: episode.summary };
 }
@@ -44,9 +47,9 @@ async function RelatedEvent({ eventSlug }: { eventSlug: string }) {
   );
 }
 
-export default async function EpisodePage({ params }: Props) {
-  const { slug } = await params;
-  const episode = getEpisode(slug);
+async function EpisodeContent({ slug }: { slug: string }) {
+  await connection();
+  const episode = await getEpisodeBySlug(slug);
   if (!episode) notFound();
 
   return (
@@ -113,12 +116,14 @@ export default async function EpisodePage({ params }: Props) {
               ) : (
                 <ul className="mt-4 space-y-5">
                   {episode.guests.map((guest) => (
-                    <li key={guest.name}>
+                    <li key={`${guest.name}-${guest.organization}`}>
                       <p className="font-display text-xl font-bold tracking-tight">
                         {guest.name}
                       </p>
                       <p className="text-sm text-steel">
-                        {guest.title}, {guest.organization}
+                        {[guest.title, guest.organization]
+                          .filter(Boolean)
+                          .join(", ")}
                       </p>
                     </li>
                   ))}
@@ -139,5 +144,14 @@ export default async function EpisodePage({ params }: Props) {
         </Container>
       </section>
     </>
+  );
+}
+
+export default async function EpisodePage({ params }: Props) {
+  const { slug } = await params;
+  return (
+    <Suspense fallback={<div className="min-h-[50vh]" aria-hidden />}>
+      <EpisodeContent slug={slug} />
+    </Suspense>
   );
 }

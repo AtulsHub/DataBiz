@@ -11,7 +11,10 @@ import {
   rsvpClosedReason,
   rsvpOpen,
 } from "@/lib/events";
-import { getEpisode } from "@/content/episodes";
+import {
+  getEpisodeBySlug,
+  getPublishedEpisodeByEventId,
+} from "@/lib/episodes";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { getSession } from "@/lib/session";
 import { Button } from "@/components/ui/Button";
@@ -44,7 +47,14 @@ async function EventContent({ slug }: { slug: string }) {
   const registeredCount = event.id ? await countRegistered(event.id) : 0;
   const canRsvp = rsvpOpen(event, registeredCount, now);
   const closedReason = rsvpClosedReason(event, registeredCount, now);
-  const episode = event.episodeSlug ? getEpisode(event.episodeSlug) : undefined;
+  const episode = event.id
+    ? ((await getPublishedEpisodeByEventId(event.id)) ??
+      (event.episodeSlug
+        ? await getEpisodeBySlug(event.episodeSlug)
+        : null))
+    : event.episodeSlug
+      ? await getEpisodeBySlug(event.episodeSlug)
+      : null;
   const session = await getSession();
   const databaseReady = isEventsDbReady();
 
