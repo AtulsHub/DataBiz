@@ -7,10 +7,11 @@ import { Container } from "@/components/ui/Container";
 import { NetworkFieldLazy } from "@/components/three/NetworkFieldLazy";
 
 type Props = {
-  recruitingHref?: string | null;
+  /** Streamed in after the hero paints — usually the open-drive note. */
+  children?: React.ReactNode;
 };
 
-export function HomeHero({ recruitingHref }: Props) {
+export function HomeHero({ children }: Props) {
   return (
     <section className="relative isolate min-h-[min(100svh,56rem)] overflow-hidden border-b border-line field-wash">
       <div
@@ -53,14 +54,7 @@ export function HomeHero({ recruitingHref }: Props) {
             </Button>
           </div>
 
-          {recruitingHref ? (
-            <p className="mt-8 border-l-2 border-ember pl-4 text-sm text-ink-soft">
-              Applications are open.{" "}
-              <Button href={recruitingHref} variant="link" className="inline text-sm">
-                Apply to the drive
-              </Button>
-            </p>
-          ) : null}
+          {children}
         </div>
       </Container>
     </section>

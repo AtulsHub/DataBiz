@@ -1,34 +1,44 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
-const NetworkField = dynamic(
-  () => import("./NetworkField").then((m) => m.NetworkField),
-  { ssr: false },
-);
+const networkFieldImport = () =>
+  import("./NetworkField").then((module) => module.NetworkField);
+
+// Start the WebGL chunk as soon as this client module evaluates.
+if (typeof window !== "undefined") {
+  void import("./NetworkField");
+}
+
+const NetworkField = dynamic(networkFieldImport, { ssr: false });
+
+function subscribe() {
+  return () => {};
+}
+
+function allowMotion() {
+  return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function fallback() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 opacity-40"
+      style={{
+        backgroundImage:
+          "radial-gradient(circle at 70% 40%, var(--glow), transparent 45%)",
+      }}
+    />
+  );
+}
 
 /** Skip WebGL when the visitor prefers reduced motion. */
 export function NetworkFieldLazy() {
-  const [ok, setOk] = useState(false);
+  const showField = useSyncExternalStore(subscribe, allowMotion, () => false);
 
-  useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setOk(!reduce);
-  }, []);
-
-  if (!ok) {
-    return (
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-0 opacity-40"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 70% 40%, var(--glow), transparent 45%)",
-        }}
-      />
-    );
-  }
+  if (!showField) return fallback();
 
   return <NetworkField />;
 }
