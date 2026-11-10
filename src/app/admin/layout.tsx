@@ -4,6 +4,7 @@ import { requireDesk } from "@/lib/session";
 import { canAccessAdmin, canPublish } from "@/lib/roles";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { DeskProvider } from "@/components/admin/DeskContext";
+import { AdminShellSkeleton } from "@/components/ui/PageLoader";
 
 async function AdminShell({ children }: { children: React.ReactNode }) {
   await connection();
@@ -35,13 +36,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-full bg-paper px-6 py-12 text-sm text-mute">
-          Checking desk session…
-        </div>
-      }
-    >
+    <Suspense fallback={<AdminShellSkeleton />}>
       <AdminShell>{children}</AdminShell>
     </Suspense>
   );

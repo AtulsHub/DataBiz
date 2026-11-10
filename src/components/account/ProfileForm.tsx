@@ -110,8 +110,13 @@ export function ProfileForm({ profile }: Props) {
         </p>
       ) : null}
 
-      <Button type="submit" variant="ember" disabled={pending}>
-        {pending ? "Saving…" : "Save profile"}
+      <Button
+        type="submit"
+        variant="ember"
+        pending={pending}
+        pendingLabel="Saving…"
+      >
+        Save profile
       </Button>
     </form>
   );

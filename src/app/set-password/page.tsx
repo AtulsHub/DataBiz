@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { SetPasswordForm } from "@/components/forms/SetPasswordForm";
 import { SignOutButton } from "@/components/account/SignOutButton";
 import { userHasCredentialPassword } from "@/lib/password";
@@ -65,15 +66,7 @@ async function SetPasswordContent({
 
 export default function SetPasswordPage({ searchParams }: Props) {
   return (
-    <Suspense
-      fallback={
-        <section className="py-16 sm:py-24">
-          <Container className="text-sm text-mute">
-            Preparing password setup…
-          </Container>
-        </section>
-      }
-    >
+    <Suspense fallback={<PageLoader label="Preparing password setup…" />}>
       <SetPasswordContent searchParams={searchParams} />
     </Suspense>
   );

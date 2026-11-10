@@ -100,9 +100,11 @@ export function ResetPasswordForm() {
         variant="primary"
         size="md"
         className="w-full"
-        disabled={pending || !token}
+        disabled={!token}
+        pending={pending}
+        pendingLabel="Saving…"
       >
-        {pending ? "Saving…" : "Save new password"}
+        Save new password
       </Button>
     </form>
   );

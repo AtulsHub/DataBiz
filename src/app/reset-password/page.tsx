@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Container } from "@/components/ui/Container";
+import { FormSkeleton } from "@/components/ui/PageLoader";
 import { ResetPasswordForm } from "@/components/forms/ResetPasswordForm";
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export default function ResetPasswordPage() {
           </p>
         </div>
         <div className="border border-line bg-paper-elevated p-6 sm:p-8">
-          <Suspense fallback={<div className="h-40 animate-pulse bg-line/40" />}>
+          <Suspense fallback={<FormSkeleton />}>
             <ResetPasswordForm />
           </Suspense>
         </div>

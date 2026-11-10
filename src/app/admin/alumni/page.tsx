@@ -25,7 +25,7 @@ export default async function AdminAlumniPage() {
           Connect Neon to review alumni submissions.
         </p>
       ) : rows.length === 0 ? (
-        <p className="mt-8 text-sm text-mute">No alumni rows yet.</p>
+        <p className="mt-8 text-sm text-mute">No alumni profiles yet.</p>
       ) : (
         <ul className="mt-10 divide-y divide-line border-y border-line">
           {rows.map((row) => (

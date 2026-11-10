@@ -23,7 +23,7 @@ async function AlumniList() {
   if (alumni.length === 0) {
     return (
       <EmptyState
-        label="Directory pending"
+        label="Alumni"
         title="No alumni profiles are published yet."
         body="Profiles appear after an alumnus sends an update and the core approves it. If that's you, the form below is the way in."
       />

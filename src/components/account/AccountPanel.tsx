@@ -20,10 +20,12 @@ import { formatDateTime } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { DeskLabel } from "@/components/ui/DeskLabel";
+import { AccountSkeleton } from "@/components/ui/PageLoader";
 import { PageHero } from "@/components/ui/PageHero";
 import { PasswordForm } from "@/components/account/PasswordForm";
 import { ProfileForm } from "@/components/account/ProfileForm";
 import { SignOutButton } from "@/components/account/SignOutButton";
+import { Spinner } from "@/components/ui/Spinner";
 
 export function AccountPanel() {
   const { data, isPending, error } = authClient.useSession();
@@ -67,11 +69,11 @@ export function AccountPanel() {
 
   if (isPending) {
     return (
-      <PageHero
-        label="Account"
-        title="Loading your account…"
-        description="Checking your session."
-      />
+      <section className="py-12 sm:py-16">
+        <Container className="max-w-5xl">
+          <AccountSkeleton />
+        </Container>
+      </section>
     );
   }
 
@@ -215,7 +217,7 @@ export function AccountPanel() {
           </h2>
           <div className="mt-8 space-y-4">
             {applications === null ? (
-              <p className="text-sm text-mute">Loading applications…</p>
+              <ListLoading label="Loading applications…" />
             ) : applications.length === 0 ? (
               <p className="text-sm text-mute">
                 No applications yet.{" "}
@@ -245,7 +247,7 @@ export function AccountPanel() {
           </h2>
           <div className="mt-8">
             {registrations === null ? (
-              <p className="text-sm text-mute">Loading registrations…</p>
+              <ListLoading label="Loading registrations…" />
             ) : registrations.length === 0 ? (
               <p className="text-sm text-mute">
                 No RSVPs yet.{" "}
@@ -296,7 +298,7 @@ export function AccountPanel() {
             </h2>
             <div className="mt-8">
               {resources === null ? (
-                <p className="text-sm text-mute">Loading resources…</p>
+                <ListLoading label="Loading resources…" />
               ) : resources.length === 0 ? (
                 <p className="text-sm text-mute">
                   No member resources published yet.
@@ -338,7 +340,7 @@ export function AccountPanel() {
           </h2>
           <div className="mt-8">
             {pathwayProgress === null ? (
-              <p className="text-sm text-mute">Loading pathway progress…</p>
+              <ListLoading label="Loading pathway progress…" />
             ) : pathwayProgress.length === 0 ? (
               <p className="text-sm text-mute">
                 Pathway tracking is for members. Browse{" "}
@@ -387,5 +389,14 @@ export function AccountPanel() {
         </Container>
       </section>
     </>
+  );
+}
+
+function ListLoading({ label }: { label: string }) {
+  return (
+    <p className="flex items-center gap-2 text-sm text-mute" aria-live="polite">
+      <Spinner className="size-3.5" />
+      {label}
+    </p>
   );
 }

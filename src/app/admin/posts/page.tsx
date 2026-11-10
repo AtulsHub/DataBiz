@@ -34,7 +34,7 @@ export default async function AdminPostsPage() {
           Connect Neon to manage posts. Public `/blog` stays empty until you publish.
         </p>
       ) : posts.length === 0 ? (
-        <p className="mt-8 text-sm text-mute">No posts in the database yet.</p>
+        <p className="mt-8 text-sm text-mute">No posts yet.</p>
       ) : (
         <ul className="mt-10 divide-y divide-line border-y border-line">
           {posts.map((post) => (

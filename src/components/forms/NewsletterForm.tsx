@@ -26,17 +26,19 @@ export function NewsletterForm() {
           name="email"
           type="email"
           required
+          disabled={pending}
           placeholder="you@email.com"
-          className="h-11 flex-1 rounded-sm border border-[color:var(--on-void-line)] bg-void-soft px-3 text-sm text-[color:var(--on-void)] placeholder:text-[color:var(--on-void-mute)] focus:border-ember focus:outline-none"
+          className="h-11 flex-1 rounded-sm border border-[color:var(--on-void-line)] bg-void-soft px-3 text-sm text-[color:var(--on-void)] placeholder:text-[color:var(--on-void-mute)] focus:border-ember focus:outline-none disabled:opacity-60"
         />
         <Button
           type="submit"
           variant="ember"
           size="md"
           className="sm:w-auto"
-          disabled={pending}
+          pending={pending}
+          pendingLabel="Sending…"
         >
-          {pending ? "Sending…" : "Subscribe"}
+          Subscribe
         </Button>
       </div>
       {state.ok ? (

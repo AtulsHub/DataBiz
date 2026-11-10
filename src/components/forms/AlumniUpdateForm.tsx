@@ -156,8 +156,14 @@ export function AlumniUpdateForm() {
         signAction={signAlumniAvatarUpload}
       />
       <div className="flex flex-wrap items-center gap-4">
-        <Button type="submit" variant="primary" size="md" disabled={pending}>
-          {pending ? "Sending…" : "Send update"}
+        <Button
+          type="submit"
+          variant="primary"
+          size="md"
+          pending={pending}
+          pendingLabel="Sending…"
+        >
+          Send update
         </Button>
         <p className="text-xs text-steel">
           The core reviews every update before it appears on this page.

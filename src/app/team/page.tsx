@@ -20,7 +20,7 @@ async function TeamGrid() {
   if (team.length === 0) {
     return (
       <EmptyState
-        label="Roster pending"
+        label="Team"
         title="The core will publish the roster here."
         body="We do not list names until the current core confirms them. Check back soon, or write to us if you need to reach someone now."
         action={{ href: "/contact", label: "Contact the core" }}

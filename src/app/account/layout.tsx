@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
+import { Container } from "@/components/ui/Container";
+import { AccountSkeleton } from "@/components/ui/PageLoader";
 import { userHasCredentialPassword } from "@/lib/password";
 import { getSession } from "@/lib/session";
 
@@ -21,7 +23,11 @@ export default function AccountLayout({
   return (
     <Suspense
       fallback={
-        <div className="px-6 py-16 text-sm text-mute">Loading account…</div>
+        <section className="py-12 sm:py-16">
+          <Container className="max-w-5xl">
+            <AccountSkeleton />
+          </Container>
+        </section>
       }
     >
       <AccountGate>{children}</AccountGate>

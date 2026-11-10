@@ -36,7 +36,7 @@ export default async function AdminEventsPage() {
         </p>
       ) : events.length === 0 ? (
         <p className="mt-8 text-sm text-mute">
-          No events in the database yet. Create one to publish a public slug.
+          No events yet. Create one to publish a public page.
         </p>
       ) : (
         <ul className="mt-10 divide-y divide-line border-y border-line">

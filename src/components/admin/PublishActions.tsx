@@ -34,9 +34,10 @@ export function PublishActions({
             name="intent"
             value="draft"
             variant="ember"
-            disabled={pending}
+            pending={pending}
+            pendingLabel="Saving…"
           >
-            {pending ? "Saving…" : "Submit for approval"}
+            Submit for approval
           </Button>
           {cancelHref ? (
             <Link href={cancelHref} className="text-sm text-mute hover:text-ink">
@@ -58,18 +59,20 @@ export function PublishActions({
         name="intent"
         value="publish"
         variant="ember"
-        disabled={pending}
+        pending={pending}
+        pendingLabel="Saving…"
       >
-        {pending ? "Saving…" : publishLabel}
+        {publishLabel}
       </Button>
       <Button
         type="submit"
         name="intent"
         value="draft"
         variant="ghost"
-        disabled={pending}
+        pending={pending}
+        pendingLabel="Saving…"
       >
-        {pending ? "Saving…" : draftLabel}
+        {draftLabel}
       </Button>
       {adminExtras}
       {publicHref ? (

@@ -39,7 +39,8 @@ export function NewsletterDraftsPanel({ drafts }: Props) {
                 type="button"
                 variant="ember"
                 size="sm"
-                disabled={pending}
+                pending={pending}
+                pendingLabel="Sending…"
                 onClick={() => {
                   startTransition(async () => {
                     const fd = new FormData();
@@ -59,7 +60,8 @@ export function NewsletterDraftsPanel({ drafts }: Props) {
                 type="button"
                 variant="ghost"
                 size="sm"
-                disabled={pending}
+                pending={pending}
+                pendingLabel="Dismissing…"
                 onClick={() => {
                   startTransition(async () => {
                     await dismissNewsletterDraft(draft.id);

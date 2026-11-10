@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { FormSkeleton } from "@/components/ui/PageLoader";
 import { Field, inputClass } from "./Field";
 import { authClient } from "@/lib/auth-client";
 import {
@@ -172,8 +173,14 @@ export function LoginForm() {
     setSent(true);
   }
 
+  if (!status) {
+    return <FormSkeleton />;
+  }
+
+  const busy = pending;
+
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-5">
+    <form onSubmit={onSubmit} noValidate className="space-y-5" aria-busy={busy}>
       {mode !== "reset" ? (
         <div
           role="tablist"
@@ -184,9 +191,10 @@ export function LoginForm() {
             type="button"
             role="tab"
             aria-selected={mode === "signin"}
+            disabled={busy}
             onClick={() => switchMode("signin")}
             className={cn(
-              "px-3 py-2 text-sm font-medium transition-colors",
+              "px-3 py-2 text-sm font-medium transition-colors disabled:opacity-60",
               mode === "signin"
                 ? "bg-paper-elevated text-ink shadow-sm"
                 : "text-mute hover:text-ink",
@@ -198,9 +206,10 @@ export function LoginForm() {
             type="button"
             role="tab"
             aria-selected={mode === "signup"}
+            disabled={busy}
             onClick={() => switchMode("signup")}
             className={cn(
-              "px-3 py-2 text-sm font-medium transition-colors",
+              "px-3 py-2 text-sm font-medium transition-colors disabled:opacity-60",
               mode === "signup"
                 ? "bg-paper-elevated text-ink shadow-sm"
                 : "text-mute hover:text-ink",
@@ -214,8 +223,9 @@ export function LoginForm() {
           <p className="text-sm font-medium text-ink">Forgot password</p>
           <button
             type="button"
+            disabled={busy}
             onClick={() => switchMode("signin")}
-            className="text-sm font-medium text-ember hover:underline"
+            className="text-sm font-medium text-ember hover:underline disabled:opacity-60"
           >
             Back to sign in
           </button>
@@ -250,6 +260,7 @@ export function LoginForm() {
           autoComplete="email"
           inputMode="email"
           required
+          disabled={busy}
           placeholder={`rollnumber${domain}`}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? "login-email-error" : "login-email-hint"}
@@ -266,6 +277,7 @@ export function LoginForm() {
             autoComplete="current-password"
             required
             minLength={8}
+            disabled={busy}
             className={inputClass}
           />
         </Field>
@@ -276,32 +288,37 @@ export function LoginForm() {
         variant="primary"
         size="md"
         className="w-full"
-        disabled={pending}
-      >
-        {pending
-          ? mode === "signin"
+        pending={busy}
+        pendingLabel={
+          mode === "signin"
             ? "Signing in…"
-            : "Sending…"
-          : mode === "signin"
-            ? "Sign in"
             : mode === "reset"
-              ? "Email me a reset link"
-              : "Email me a sign-up link"}
+              ? "Sending reset link…"
+              : "Sending sign-up link…"
+        }
+      >
+        {mode === "signin"
+          ? "Sign in"
+          : mode === "reset"
+            ? "Email me a reset link"
+            : "Email me a sign-up link"}
       </Button>
 
       {mode === "signin" ? (
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <button
             type="button"
+            disabled={busy}
             onClick={() => switchMode("signup")}
-            className="font-medium text-ember hover:underline"
+            className="font-medium text-ember hover:underline disabled:opacity-60"
           >
             Need an account? Sign up
           </button>
           <button
             type="button"
+            disabled={busy}
             onClick={() => switchMode("reset")}
-            className="text-mute hover:text-ink hover:underline"
+            className="text-mute hover:text-ink hover:underline disabled:opacity-60"
           >
             Forgot password?
           </button>
@@ -313,8 +330,9 @@ export function LoginForm() {
           Already verified?{" "}
           <button
             type="button"
+            disabled={busy}
             onClick={() => switchMode("signin")}
-            className="font-medium text-ember hover:underline"
+            className="font-medium text-ember hover:underline disabled:opacity-60"
           >
             Sign in
           </button>

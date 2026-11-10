@@ -140,9 +140,10 @@ export function EventRsvpForm({
         variant="signal"
         size="md"
         className="w-full"
-        disabled={pending}
+        pending={pending}
+        pendingLabel="Saving…"
       >
-        {pending ? "Saving…" : "Reserve a seat"}
+        Reserve a seat
       </Button>
     </form>
   );

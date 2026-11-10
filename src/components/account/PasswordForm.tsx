@@ -136,12 +136,13 @@ export function PasswordForm() {
         </p>
       ) : null}
 
-      <Button type="submit" variant="ember" disabled={pending}>
-        {pending
-          ? "Saving…"
-          : hasPassword
-            ? "Change password"
-            : "Set password"}
+      <Button
+        type="submit"
+        variant="ember"
+        pending={pending}
+        pendingLabel="Saving…"
+      >
+        {hasPassword ? "Change password" : "Set password"}
       </Button>
     </form>
   );

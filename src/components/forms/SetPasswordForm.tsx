@@ -81,9 +81,10 @@ export function SetPasswordForm() {
         variant="primary"
         size="md"
         className="w-full"
-        disabled={pending}
+        pending={pending}
+        pendingLabel="Saving…"
       >
-        {pending ? "Saving…" : "Save password and continue"}
+        Save password and continue
       </Button>
     </form>
   );

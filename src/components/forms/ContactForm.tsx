@@ -102,8 +102,14 @@ export function ContactForm() {
         />
       </Field>
       <div className="flex flex-wrap items-center gap-4">
-        <Button type="submit" variant="primary" size="md" disabled={pending}>
-          {pending ? "Sending…" : "Send message"}
+        <Button
+          type="submit"
+          variant="primary"
+          size="md"
+          pending={pending}
+          pendingLabel="Sending…"
+        >
+          Send message
         </Button>
         <p className="text-xs text-steel">
           Delivered to {site.email} via Resend.

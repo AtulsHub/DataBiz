@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Spinner } from "./Spinner";
 import { cn } from "@/lib/utils";
 
 const variants = {
@@ -34,6 +35,8 @@ type Common = {
 type ButtonAsButton = Common &
   Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children" | "className"> & {
     href?: undefined;
+    pending?: boolean;
+    pendingLabel?: React.ReactNode;
   };
 
 type ButtonAsLink = Common & {
@@ -78,12 +81,27 @@ export function Button(props: ButtonAsButton | ButtonAsLink) {
     size: _size,
     children: _children,
     className: _className,
+    pending = false,
+    pendingLabel,
+    disabled,
     ...rest
   } = buttonProps;
 
   return (
-    <button className={classes} {...rest}>
-      {children}
+    <button
+      className={classes}
+      disabled={disabled || pending}
+      aria-busy={pending || undefined}
+      {...rest}
+    >
+      {pending ? (
+        <>
+          <Spinner className="size-3.5" label="Working" />
+          <span>{pendingLabel ?? children}</span>
+        </>
+      ) : (
+        children
+      )}
     </button>
   );
 }

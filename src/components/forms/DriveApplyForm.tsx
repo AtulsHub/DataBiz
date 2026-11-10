@@ -101,8 +101,14 @@ export function DriveApplyForm({
           className={inputClass}
         />
       </Field>
-      <Button type="submit" variant="ember" disabled={pending} className="w-full">
-        {pending ? "Submitting…" : "Submit application"}
+      <Button
+        type="submit"
+        variant="ember"
+        className="w-full"
+        pending={pending}
+        pendingLabel="Submitting…"
+      >
+        Submit application
       </Button>
     </form>
   );

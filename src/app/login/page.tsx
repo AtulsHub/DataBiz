@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { LoginForm } from "@/components/forms/LoginForm";
 import { userHasCredentialPassword } from "@/lib/password";
 import { getSession } from "@/lib/session";
@@ -76,13 +77,7 @@ async function LoginContent({
 
 export default function LoginPage({ searchParams }: Props) {
   return (
-    <Suspense
-      fallback={
-        <section className="py-16 sm:py-24">
-          <Container className="text-sm text-mute">Checking session…</Container>
-        </section>
-      }
-    >
+    <Suspense fallback={<PageLoader label="Checking session…" />}>
       <LoginContent searchParams={searchParams} />
     </Suspense>
   );

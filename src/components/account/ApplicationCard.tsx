@@ -77,7 +77,8 @@ export function ApplicationCard({ application, slots }: Props) {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        disabled={pending}
+                        pending={pending}
+                        pendingLabel="Booking…"
                         onClick={() =>
                           startTransition(async () => {
                             const result = await bookInterviewSlot(
@@ -105,7 +106,8 @@ export function ApplicationCard({ application, slots }: Props) {
               type="button"
               variant="ember"
               size="sm"
-              disabled={pending}
+              pending={pending}
+              pendingLabel="Accepting…"
               onClick={() =>
                 startTransition(async () => {
                   const result = await respondToOffer(application.id, "accepted");
@@ -119,7 +121,8 @@ export function ApplicationCard({ application, slots }: Props) {
               type="button"
               variant="ghost"
               size="sm"
-              disabled={pending}
+              pending={pending}
+              pendingLabel="Declining…"
               onClick={() =>
                 startTransition(async () => {
                   const result = await respondToOffer(application.id, "declined");

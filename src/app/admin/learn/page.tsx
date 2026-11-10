@@ -47,8 +47,7 @@ export default async function AdminLearnPage() {
         </p>
       ) : pathways.length === 0 ? (
         <p className="mt-8 text-sm text-mute">
-          No pathways in the database yet. Seed the three starter pathways or
-          create one.
+          No pathways yet. Seed the three starter pathways or create one.
         </p>
       ) : (
         <ul className="mt-10 divide-y divide-line border-y border-line">

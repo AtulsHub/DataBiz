@@ -36,7 +36,7 @@ export default async function AdminShowPage() {
           publish.
         </p>
       ) : episodes.length === 0 ? (
-        <p className="mt-8 text-sm text-mute">No episodes in the database yet.</p>
+        <p className="mt-8 text-sm text-mute">No episodes yet.</p>
       ) : (
         <ul className="mt-10 divide-y divide-line border-y border-line">
           {episodes.map((episode) => (

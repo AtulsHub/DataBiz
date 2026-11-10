@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { DeskLabel } from "@/components/ui/DeskLabel";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { PageHero } from "@/components/ui/PageHero";
 import { Reveal } from "@/components/ui/Reveal";
 
@@ -37,7 +38,7 @@ async function SponsorsBody() {
           </Reveal>
           {sponsors.length === 0 ? (
             <EmptyState
-              label="Logos pending"
+              label="Sponsors"
               title="No sponsors are listed yet."
               body="We only show a logo once the organization has agreed to it. This space stays empty until then."
             />
@@ -132,14 +133,12 @@ async function SponsorsBody() {
               </Button>
             ) : (
               <Button
-                type="button"
+                href={`mailto:${site.email}?subject=Sponsorship%20brochure`}
                 variant="inverse"
                 size="md"
-                disabled
-                aria-disabled="true"
-                className="mt-5 cursor-not-allowed opacity-50"
+                className="mt-5"
               >
-                Brochure PDF — coming soon
+                Request the brochure
               </Button>
             )}
           </div>
@@ -159,7 +158,7 @@ export default function SponsorsPage() {
         description={sponsorsCopy.body}
         align="split"
       />
-      <Suspense fallback={<div className="min-h-[40vh]" aria-hidden />}>
+      <Suspense fallback={<PageLoader label="Loading sponsors…" />}>
         <SponsorsBody />
       </Suspense>
     </>
