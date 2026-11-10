@@ -20,6 +20,8 @@ export type EventRegistration = {
   year: string;
   branch: string;
   status: "registered" | "attended" | "cancelled";
+  ticketCode: string | null;
+  checkedInAt: string | null;
   createdAt: string;
 };
 
@@ -186,6 +188,77 @@ export async function countRegistered(eventId: string) {
   return row?.value ?? 0;
 }
 
+function mapRegistration(
+  row: typeof eventRegistrations.$inferSelect,
+): EventRegistration {
+  return {
+    id: row.id,
+    eventId: row.eventId,
+    userId: row.userId,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    email: row.email,
+    year: row.year,
+    branch: row.branch,
+    status: row.status as EventRegistration["status"],
+    ticketCode: row.ticketCode ?? null,
+    checkedInAt: row.checkedInAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+export async function getRegistrationForEmail(
+  eventId: string,
+  email: string,
+): Promise<EventRegistration | null> {
+  const db = getDb();
+  if (!db || !email.trim()) return null;
+
+  const [row] = await db
+    .select()
+    .from(eventRegistrations)
+    .where(
+      and(
+        eq(eventRegistrations.eventId, eventId),
+        eq(eventRegistrations.email, email.trim().toLowerCase()),
+      ),
+    )
+    .limit(1);
+
+  if (!row || row.status === "cancelled") return null;
+  return mapRegistration(row);
+}
+
+export async function getRegistrationForUser(
+  eventId: string,
+  userId: string,
+  email?: string | null,
+): Promise<EventRegistration | null> {
+  const db = getDb();
+  if (!db || !userId) return null;
+
+  const [byUser] = await db
+    .select()
+    .from(eventRegistrations)
+    .where(
+      and(
+        eq(eventRegistrations.eventId, eventId),
+        eq(eventRegistrations.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  if (byUser && byUser.status !== "cancelled") {
+    return mapRegistration(byUser);
+  }
+
+  if (email) {
+    return getRegistrationForEmail(eventId, email);
+  }
+
+  return null;
+}
+
 export async function listEventRegistrations(
   eventId: string,
 ): Promise<EventRegistration[]> {
@@ -208,6 +281,8 @@ export async function listEventRegistrations(
     year: row.year,
     branch: row.branch,
     status: row.status as EventRegistration["status"],
+    ticketCode: row.ticketCode ?? null,
+    checkedInAt: row.checkedInAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
   }));
 }

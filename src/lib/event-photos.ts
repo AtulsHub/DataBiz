@@ -18,6 +18,41 @@ export type GalleryPhotoItem = EventPhotoItem & {
   eventStartsAt: string;
 };
 
+export type GalleryEventSection = {
+  eventId: string;
+  eventSlug: string;
+  eventTitle: string;
+  eventStartsAt: string;
+  photos: GalleryPhotoItem[];
+};
+
+/** Group flat gallery photos into event sections (newest event first). */
+export function groupGalleryByEvent(
+  photos: GalleryPhotoItem[],
+): GalleryEventSection[] {
+  const sections = new Map<string, GalleryEventSection>();
+
+  for (const photo of photos) {
+    const existing = sections.get(photo.eventId);
+    if (existing) {
+      existing.photos.push(photo);
+      continue;
+    }
+    sections.set(photo.eventId, {
+      eventId: photo.eventId,
+      eventSlug: photo.eventSlug,
+      eventTitle: photo.eventTitle,
+      eventStartsAt: photo.eventStartsAt,
+      photos: [photo],
+    });
+  }
+
+  return [...sections.values()].sort(
+    (a, b) =>
+      new Date(b.eventStartsAt).getTime() - new Date(a.eventStartsAt).getTime(),
+  );
+}
+
 function mapRow(row: typeof eventPhotos.$inferSelect): EventPhotoItem {
   return {
     id: row.id,

@@ -241,8 +241,86 @@
     display: block;
     width: 100%;
     height: auto;
-    margin: 1.5rem 0;
+    margin: 0;
     border: 1px solid var(--line);
+  }
+
+  .prose-databiz .post-figure {
+    margin: 1.75rem 0;
+  }
+
+  .prose-databiz .post-figure img {
+    border-radius: 0.2rem;
+    background: var(--paper-elevated);
+  }
+
+  .prose-databiz .post-figure figcaption {
+    margin-top: 0.55rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    line-height: 1.45;
+    color: var(--mute);
+  }
+
+  .prose-databiz .post-figure--wide {
+    width: min(100vw - 2rem, 52rem);
+    max-width: none;
+    margin-left: 50%;
+    translate: -50% 0;
+  }
+
+  .prose-databiz .post-figure--card {
+    width: min(100%, 22rem);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .prose-databiz .post-figure--half {
+    display: inline-block;
+    width: calc(50% - 0.5rem);
+    margin: 0.35rem 0;
+    vertical-align: top;
+  }
+
+  .prose-databiz .post-figure--half + .post-figure--half {
+    margin-left: 1rem;
+  }
+
+  .prose-databiz p:has(> .post-figure--half) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1.75rem 0;
+  }
+
+  .prose-databiz p:has(> .post-figure--half) > .post-figure--half {
+    flex: 1 1 calc(50% - 0.5rem);
+    width: auto;
+    min-width: min(100%, 14rem);
+    margin: 0;
+  }
+
+  .prose-databiz.post-article > p:first-of-type::first-letter {
+    float: left;
+    margin: 0.12rem 0.45rem 0 0;
+    font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+    font-size: 3.4rem;
+    font-weight: 600;
+    line-height: 0.85;
+    color: var(--ember);
+  }
+
+  @media (max-width: 640px) {
+    .prose-databiz .post-figure--wide {
+      width: 100%;
+      margin-left: 0;
+      translate: none;
+    }
+
+    .prose-databiz p:has(> .post-figure--half) {
+      flex-direction: column;
+    }
   }
 
   .prose-databiz .inline-code,
@@ -498,12 +576,420 @@
     );
   }
 
+  .brochure-marquee {
+    animation: brochure-marquee 42s linear infinite;
+  }
+
+  @keyframes brochure-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .brochure-ladder {
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--ember) 10%, transparent),
+        transparent 40%
+      ),
+      var(--paper-elevated);
+  }
+
+  /* Interactive hanging event ID — collar + swinging cords + badge */
+  .ticket-stage {
+    --ticket-width: min(21.5rem, calc(100vw - 2.5rem));
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0.25rem 0 2rem;
+  }
+
+  .ticket-stage__hint {
+    margin-bottom: 0.85rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mute);
+    text-align: center;
+  }
+
+  .ticket-rig {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(24rem, 100%);
+    perspective: 1400px;
+    touch-action: none;
+  }
+
+  .ticket-collar {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    height: 0.85rem;
+  }
+
+  .ticket-collar__band {
+    width: min(11.5rem, 58%);
+    height: 0.72rem;
+    border-radius: 999px;
+    background:
+      linear-gradient(
+        180deg,
+        #ff8a6e 0%,
+        var(--ember) 42%,
+        var(--ember-deep) 100%
+      );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      0 4px 12px color-mix(in srgb, var(--ink) 18%, transparent);
+  }
+
+  .ticket-pendulum {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: var(--ticket-width);
+    flex-direction: column;
+    align-items: center;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    outline: none;
+    transform-origin: 50% 0;
+    transform-style: preserve-3d;
+  }
+
+  .ticket-pendulum:active {
+    cursor: grabbing;
+  }
+
+  .ticket-pendulum:focus-visible {
+    outline: 2px solid var(--ember);
+    outline-offset: 10px;
+    border-radius: 1.2rem;
+  }
+
+  .ticket-cords {
+    display: block;
+    width: 11.5rem;
+    height: 6.75rem;
+    margin-top: -0.15rem;
+    overflow: visible;
+    filter: drop-shadow(0 4px 8px color-mix(in srgb, var(--ink) 16%, transparent));
+  }
+
+  .ticket-clip {
+    position: relative;
+    z-index: 4;
+    display: grid;
+    margin-top: -0.55rem;
+    margin-bottom: -0.85rem;
+    justify-items: center;
+  }
+
+  .ticket-clip__ring {
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 999px;
+    border: 0.18rem solid #c8ced8;
+    background:
+      radial-gradient(
+        circle at 32% 28%,
+        rgba(255, 255, 255, 0.9),
+        transparent 48%
+      ),
+      linear-gradient(160deg, #eef1f5, #8b919c);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.7),
+      0 2px 6px color-mix(in srgb, var(--ink) 20%, transparent);
+  }
+
+  .ticket-clip__stem {
+    margin-top: -0.18rem;
+    width: 0.42rem;
+    height: 0.7rem;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #dfe3ea, #7a808c);
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--ink) 18%, transparent);
+  }
+
+  .ticket-badge-flip {
+    position: relative;
+    width: 100%;
+    min-height: 34rem;
+    transform-style: preserve-3d;
+    transform-origin: center center;
+  }
+
+  .ticket-badge {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 1.2rem;
+    border: 1px solid color-mix(in srgb, var(--line-strong) 80%, var(--ink));
+    background:
+      linear-gradient(
+        165deg,
+        color-mix(in srgb, var(--paper-elevated) 92%, #fff) 0%,
+        var(--paper-elevated) 45%,
+        color-mix(in srgb, var(--ember-soft) 28%, var(--paper-elevated)) 100%
+      );
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #fff 55%, transparent),
+      0 22px 48px color-mix(in srgb, var(--ink) 18%, transparent),
+      0 48px 80px color-mix(in srgb, var(--ink) 10%, transparent);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .ticket-badge--back {
+    transform: rotateY(180deg);
+    background:
+      linear-gradient(
+        165deg,
+        var(--void) 0%,
+        color-mix(in srgb, var(--void) 86%, var(--ember-deep)) 100%
+      );
+    color: var(--on-void);
+  }
+
+  .ticket-badge__hole {
+    position: absolute;
+    top: 0.85rem;
+    left: 50%;
+    z-index: 3;
+    width: 1.05rem;
+    height: 1.05rem;
+    translate: -50% 0;
+    border-radius: 999px;
+    border: 0.14rem solid color-mix(in srgb, var(--ink) 28%, var(--line-strong));
+    background:
+      radial-gradient(
+        circle at 50% 50%,
+        color-mix(in srgb, var(--paper) 70%, transparent) 0 38%,
+        color-mix(in srgb, var(--ink) 18%, transparent) 42% 100%
+      );
+    box-shadow:
+      inset 0 1px 2px color-mix(in srgb, var(--ink) 35%, transparent),
+      0 1px 0 color-mix(in srgb, #fff 40%, transparent);
+  }
+
+  .ticket-badge--back .ticket-badge__hole {
+    border-color: color-mix(in srgb, #fff 28%, transparent);
+    background:
+      radial-gradient(
+        circle at 50% 50%,
+        color-mix(in srgb, var(--void-soft) 80%, transparent) 0 38%,
+        color-mix(in srgb, #000 45%, transparent) 42% 100%
+      );
+  }
+
+  .ticket-badge__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 2.1rem 1.25rem 1rem;
+    background:
+      linear-gradient(
+        160deg,
+        var(--void) 0%,
+        color-mix(in srgb, var(--void) 88%, var(--ember-deep)) 100%
+      );
+    color: var(--on-void);
+  }
+
+  .ticket-badge__eyebrow {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ember);
+  }
+
+  .ticket-badge__brand {
+    margin-top: 0.35rem;
+    font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+
+  .ticket-badge__college {
+    margin-top: 0.25rem;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    color: var(--on-void-mute);
+  }
+
+  .ticket-badge__status {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+    border: 1px solid color-mix(in srgb, var(--ember) 55%, transparent);
+    border-radius: 999px;
+    padding: 0.28rem 0.55rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--on-void) 88%, var(--ember));
+  }
+
+  .ticket-badge__status--in {
+    border-color: color-mix(in srgb, #4ade80 55%, transparent);
+    color: #86efac;
+  }
+
+  .ticket-badge__body {
+    display: grid;
+    gap: 1.05rem;
+    padding: 1.1rem 1.25rem 1.15rem;
+  }
+
+  .ticket-badge__name {
+    font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    color: var(--ink);
+  }
+
+  .ticket-badge__meta {
+    margin-top: 0.3rem;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+
+  .ticket-badge__email {
+    margin-top: 0.2rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.68rem;
+    color: var(--mute);
+    word-break: break-all;
+  }
+
+  .ticket-badge__event {
+    border-top: 1px dashed var(--line);
+    padding-top: 0.9rem;
+  }
+
+  .ticket-badge__event-label {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+
+  .ticket-badge__event-title {
+    margin-top: 0.35rem;
+    font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.02rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+
+  .ticket-badge__event-when {
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--mute);
+  }
+
+  .ticket-badge__qr-wrap {
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
+  }
+
+  .ticket-badge__qr {
+    width: 9.75rem;
+    height: 9.75rem;
+    padding: 0.5rem;
+    border-radius: 0.65rem;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent);
+  }
+
+  .ticket-badge__qr--lg {
+    width: 12.5rem;
+    height: 12.5rem;
+    margin-top: 1rem;
+    border-color: color-mix(in srgb, #fff 18%, transparent);
+    background: #fff;
+  }
+
+  .ticket-badge__code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+  }
+
+  .ticket-badge--back .ticket-badge__code {
+    color: var(--on-void);
+  }
+
+  .ticket-badge__check {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+
+  .ticket-badge--back .ticket-badge__check {
+    color: var(--on-void-mute);
+  }
+
+  .ticket-badge__back-inner {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 2.4rem 1.25rem 1.25rem;
+    text-align: center;
+  }
+
+  .ticket-badge__foot {
+    margin-top: 0.55rem;
+    max-width: 16rem;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--on-void-mute);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .ambient-orb-a,
     .ambient-orb-b,
     .ambient-orb-c,
     .ambient-sheen {
       animation: none !important;
+    }
+
+    .brochure-marquee {
+      animation: none;
     }
 
     .surface-card-hover:hover {

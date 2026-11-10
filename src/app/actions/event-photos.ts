@@ -25,6 +25,38 @@ function formString(formData: FormData, key: string) {
   return typeof value === "string" ? value : "";
 }
 
+function collectPublicIds(formData: FormData): string[] {
+  const fromMulti = formData
+    .getAll("publicId")
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (fromMulti.length > 0) return [...new Set(fromMulti)];
+
+  const rawJson = formString(formData, "publicIds").trim();
+  if (rawJson) {
+    try {
+      const parsed = JSON.parse(rawJson) as unknown;
+      if (Array.isArray(parsed)) {
+        return [
+          ...new Set(
+            parsed
+              .filter((value): value is string => typeof value === "string")
+              .map((value) => value.trim())
+              .filter(Boolean),
+          ),
+        ];
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  const single = formString(formData, "publicId").trim();
+  return single ? [single] : [];
+}
+
 export async function addEventPhoto(
   eventId: string,
   _prev: ActionResult | undefined,
@@ -34,15 +66,16 @@ export async function addEventPhoto(
   const blocked = requireDb();
   if (blocked) return blocked;
 
+  const publicIds = collectPublicIds(formData);
+  const caption = formString(formData, "caption").trim();
+
   const parsed = z
     .object({
-      publicId: z.string().trim().min(1, "Upload a photo first."),
-      caption: z.string().trim().default(""),
+      publicIds: z.array(z.string().min(1)).min(1, "Upload at least one photo."),
+      caption: z.string().default(""),
     })
-    .safeParse({
-      publicId: formString(formData, "publicId"),
-      caption: formString(formData, "caption"),
-    });
+    .safeParse({ publicIds, caption });
+
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message || "Invalid form." };
   }
@@ -64,13 +97,16 @@ export async function addEventPhoto(
     };
   }
 
-  await db.insert(eventPhotos).values({
-    id: crypto.randomUUID(),
-    eventId,
-    publicId: parsed.data.publicId,
-    caption: parsed.data.caption,
-    sortOrder: Date.now() % 100000,
-  });
+  const baseOrder = Date.now() % 100000;
+  await db.insert(eventPhotos).values(
+    parsed.data.publicIds.map((publicId, index) => ({
+      id: crypto.randomUUID(),
+      eventId,
+      publicId,
+      caption: parsed.data.caption,
+      sortOrder: baseOrder + index,
+    })),
+  );
 
   revalidatePath(`/admin/events/${eventId}`);
   revalidatePath("/admin/gallery");

@@ -27,6 +27,7 @@ export function EventRegistrationsTable({ registrations }: Props) {
             <th className="px-3 py-2 font-medium">Name</th>
             <th className="px-3 py-2 font-medium">Email</th>
             <th className="px-3 py-2 font-medium">Year / branch</th>
+            <th className="px-3 py-2 font-medium">Ticket</th>
             <th className="px-3 py-2 font-medium">Status</th>
             <th className="px-3 py-2 font-medium">When</th>
             <th className="px-3 py-2 font-medium">Check-in</th>
@@ -41,6 +42,14 @@ export function EventRegistrationsTable({ registrations }: Props) {
               <td className="px-3 py-3 font-mono text-xs">{row.email}</td>
               <td className="px-3 py-3 text-mute">
                 {row.year} · {row.branch}
+              </td>
+              <td className="px-3 py-3 font-mono text-xs">
+                {row.ticketCode ?? "—"}
+                {row.checkedInAt ? (
+                  <span className="mt-1 block text-mute">
+                    in {formatDateTime(row.checkedInAt)}
+                  </span>
+                ) : null}
               </td>
               <td className="px-3 py-3 capitalize">{row.status}</td>
               <td className="px-3 py-3 text-mute">

@@ -83,6 +83,24 @@ export async function getPublishedPosts(): Promise<PostItem[]> {
   return mapped.length > 0 ? mapped : seed;
 }
 
+function isAbortLike(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as {
+    name?: string;
+    message?: string;
+    cause?: { name?: string; message?: string };
+  };
+  const text = [
+    candidate.name,
+    candidate.message,
+    candidate.cause?.name,
+    candidate.cause?.message,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return /abort/i.test(text);
+}
+
 export async function getPostBySlug(slug: string): Promise<PostItem | null> {
   const seedMatch =
     withSeedIds(seedPosts).find(
@@ -92,14 +110,32 @@ export async function getPostBySlug(slug: string): Promise<PostItem | null> {
   const db = getDb();
   if (!db) return seedMatch;
 
-  const [row] = await db
-    .select()
-    .from(postsTable)
-    .where(eq(postsTable.slug, slug))
-    .limit(1);
+  const load = async () => {
+    const [row] = await db
+      .select()
+      .from(postsTable)
+      .where(eq(postsTable.slug, slug))
+      .limit(1);
 
-  if (!row || row.status === "draft") return seedMatch;
-  return mapRow(row);
+    if (!row || row.status === "draft") return seedMatch;
+    return mapRow(row);
+  };
+
+  try {
+    return await load();
+  } catch (error) {
+    // Neon/dev navigations often abort in-flight HTTP; retry once, then seed.
+    if (!isAbortLike(error)) throw error;
+    try {
+      return await load();
+    } catch (retryError) {
+      if (isAbortLike(retryError)) {
+        console.warn("[posts] getPostBySlug aborted twice for", slug);
+        return seedMatch;
+      }
+      throw retryError;
+    }
+  }
 }
 
 export async function listPublicPostSlugs() {

@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import {
   countRegistered,
   getEventBySlug,
+  getRegistrationForUser,
   isEventsDbReady,
   listStaticEventParams,
   rsvpClosedReason,
@@ -18,6 +19,7 @@ import {
 import { listEventPhotos } from "@/lib/event-photos";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { getSession } from "@/lib/session";
+import { GalleryImage } from "@/components/gallery/GalleryImage";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { DeskLabel } from "@/components/ui/DeskLabel";
@@ -59,6 +61,15 @@ async function EventContent({ slug }: { slug: string }) {
   const photos = event.id ? await listEventPhotos(event.id) : [];
   const session = await getSession();
   const databaseReady = isEventsDbReady();
+  const lockedEmail = session?.user.email?.trim().toLowerCase() || undefined;
+  const existingTicket =
+    event.id && session
+      ? await getRegistrationForUser(
+          event.id,
+          session.user.id,
+          lockedEmail,
+        )
+      : null;
 
   const nameParts = (session?.user.name || "")
     .trim()
@@ -68,7 +79,7 @@ async function EventContent({ slug }: { slug: string }) {
     ? {
         firstName: nameParts[0] || "",
         lastName: nameParts.slice(1).join(" ") || "",
-        email: session.user.email,
+        email: lockedEmail || session.user.email,
         year: session.user.year ?? "",
         branch: session.user.branch ?? "",
       }
@@ -127,13 +138,14 @@ async function EventContent({ slug }: { slug: string }) {
                       {photos.map((photo) => (
                         <li key={photo.id}>
                           {photo.url ? (
-                            <Image
-                              src={photo.url}
-                              alt={photo.caption || `Photo from ${event.title}`}
-                              width={800}
-                              height={500}
-                              className="aspect-video w-full rounded-[var(--radius)] border border-line object-cover"
-                            />
+                            <div className="overflow-hidden rounded-[var(--radius)] border border-line">
+                              <GalleryImage
+                                src={photo.url}
+                                alt={photo.caption || `Photo from ${event.title}`}
+                                caption={photo.caption || event.title}
+                                className="aspect-video w-full object-cover"
+                              />
+                            </div>
                           ) : null}
                           {photo.caption ? (
                             <p className="mt-2 text-sm text-steel">{photo.caption}</p>
@@ -230,6 +242,15 @@ async function EventContent({ slug }: { slug: string }) {
                     eventTitle={event.title}
                     eventSlug={event.slug}
                     defaults={defaults}
+                    lockedEmail={lockedEmail}
+                    existingTicket={
+                      existingTicket
+                        ? {
+                            id: existingTicket.id,
+                            ticketCode: existingTicket.ticketCode,
+                          }
+                        : null
+                    }
                     databaseReady={databaseReady}
                   />
                 </div>

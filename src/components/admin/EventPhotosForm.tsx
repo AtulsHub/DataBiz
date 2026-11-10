@@ -1,11 +1,11 @@
 "use client";
 
 import { useActionState, useTransition } from "react";
-import Image from "next/image";
 import { addEventPhoto, deleteEventPhoto } from "@/app/actions/event-photos";
 import type { ActionResult } from "@/app/actions/events";
 import type { EventPhotoItem } from "@/lib/event-photos";
 import { CLOUDINARY_FOLDERS } from "@/lib/cloudinary-folders";
+import { GalleryImage } from "@/components/gallery/GalleryImage";
 import { Button } from "@/components/ui/Button";
 import { Field, inputClass } from "@/components/forms/Field";
 import { ImageUpload } from "@/components/admin/ImageUpload";
@@ -32,21 +32,27 @@ export function EventPhotosForm({ eventId, photos }: Props) {
         ) : null}
         {state.ok ? (
           <p className="text-sm text-signal-deep" role="status">
-            Photo added.
+            Photos added.
           </p>
         ) : null}
         <ImageUpload
           name="publicId"
           folder={CLOUDINARY_FOLDERS.gallery}
-          label="Gallery photo"
+          label="Gallery photos"
           hint="Shown on the past event page and on /gallery."
-          clearLabel="Clear"
+          clearLabel="Clear all"
+          multiple
         />
         <Field id="caption" label="Caption">
-          <input id="caption" name="caption" className={inputClass} />
+          <input
+            id="caption"
+            name="caption"
+            className={inputClass}
+            placeholder="Optional — applied to every photo in this upload"
+          />
         </Field>
         <Button type="submit" variant="ghost" size="sm" disabled={pending}>
-          {pending ? "Adding…" : "Add photo"}
+          {pending ? "Adding…" : "Add photos"}
         </Button>
       </form>
 
@@ -57,11 +63,9 @@ export function EventPhotosForm({ eventId, photos }: Props) {
           {photos.map((photo) => (
             <li key={photo.id} className="border border-line bg-paper-elevated p-3">
               {photo.url ? (
-                <Image
+                <GalleryImage
                   src={photo.url}
                   alt={photo.caption || ""}
-                  width={480}
-                  height={320}
                   className="aspect-video w-full object-cover"
                 />
               ) : null}

@@ -272,15 +272,26 @@ export function AccountPanel() {
                       </Link>
                       <p className="mt-1 font-mono text-xs text-mute">
                         {formatDateTime(row.event.startsAt)} · {row.status}
+                        {row.ticketCode ? ` · ${row.ticketCode}` : null}
+                        {row.checkedInAt ? " · checked in" : null}
                       </p>
                     </div>
-                    <Button
-                      href={`/events/${row.event.slug}`}
-                      variant="ghost"
-                      size="sm"
-                    >
-                      Open
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        href={`/account/tickets/${row.id}`}
+                        variant="ember"
+                        size="sm"
+                      >
+                        Virtual ID
+                      </Button>
+                      <Button
+                        href={`/events/${row.event.slug}`}
+                        variant="ghost"
+                        size="sm"
+                      >
+                        Event
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>

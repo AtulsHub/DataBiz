@@ -45,13 +45,8 @@ export function HomeHero({ recruitingHref }: Props) {
             <Button href="/events" variant="primary" size="lg">
               See events
             </Button>
-            <Button
-              href={site.brochureUrl}
-              external
-              variant="ghost"
-              size="lg"
-            >
-              Download brochure
+            <Button href="/brochure" variant="ghost" size="lg">
+              Brochure
             </Button>
             <Button href="/about" variant="link" className="gap-1">
               Who we are <ArrowUpRight size={16} />

@@ -75,5 +75,5 @@ Contact: databiz.nitb@gmail.com.`;
 
 export const sponsorsCopy = {
   headline: "Partner with students who turn data into stories",
-  body: "Organizations that want to support data and analytics education at NIT Bhopal can sponsor sessions, fests, and the society’s year-round work. Reach the core for a conversation and brochure.",
+  body: "Organizations that want to support data and analytics education at NIT Bhopal can sponsor sessions, fests, and the society’s year-round work. Read the brochure, then reach the core.",
 };

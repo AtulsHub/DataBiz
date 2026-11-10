@@ -18,12 +18,12 @@ export function HomeSponsorsApproach() {
             </h2>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-on-void-soft">
               Support a workshop, a fest, or the society&apos;s year-round work.
-              Download the brochure, then write to the core — we reply with
-              options that fit your goals.
+              Read the brochure, then write to the core — we reply with options
+              that fit your goals.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button href={site.brochureUrl} external variant="spark" size="md">
-                Download brochure
+              <Button href="/brochure" variant="spark" size="md">
+                Brochure
               </Button>
               <Button
                 href={`mailto:${site.email}?subject=${encodeURIComponent("Sponsorship inquiry — DataBiz")}`}
@@ -47,7 +47,7 @@ export function HomeSponsorsApproach() {
                 <li>
                   <span className="font-mono text-ember">01</span>
                   <span className="ml-3">
-                    Read the brochure for formats and timelines.
+                    Open the brochure for packages and timelines.
                   </span>
                 </li>
                 <li>

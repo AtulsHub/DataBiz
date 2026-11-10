@@ -1,6 +1,6 @@
 "use server";
 
-import { and, desc, eq, ne } from "drizzle-orm";
+import { and, desc, eq, ne, or } from "drizzle-orm";
 import { cookies, headers } from "next/headers";
 import { getDb, isDatabaseConfigured } from "@/db";
 import { eventRegistrations, events } from "@/db/schema";
@@ -23,6 +23,11 @@ import {
 } from "@/lib/resources";
 import { hasMinRole } from "@/lib/roles";
 import { getSession } from "@/lib/session";
+import {
+  createTicketCode,
+  ticketChecksum,
+  ticketQrDataUrl,
+} from "@/lib/tickets";
 
 async function sessionRequestHeaders() {
   const cookieStore = await cookies();
@@ -41,6 +46,8 @@ async function sessionRequestHeaders() {
 export type MyRegistration = {
   id: string;
   status: string;
+  ticketCode: string | null;
+  checkedInAt: string | null;
   createdAt: string;
   event: {
     id: string;
@@ -48,6 +55,28 @@ export type MyRegistration = {
     title: string;
     startsAt: string;
     status: string;
+  };
+};
+
+export type MyEventTicket = {
+  id: string;
+  ticketCode: string;
+  checksum: string;
+  qrDataUrl: string;
+  status: string;
+  checkedInAt: string | null;
+  firstName: string;
+  lastName: string;
+  email: string;
+  year: string;
+  branch: string;
+  event: {
+    id: string;
+    slug: string;
+    title: string;
+    venue: string;
+    startsAt: string;
+    endsAt: string;
   };
 };
 
@@ -63,6 +92,8 @@ export async function listMyRegistrations(): Promise<MyRegistration[]> {
     .select({
       id: eventRegistrations.id,
       status: eventRegistrations.status,
+      ticketCode: eventRegistrations.ticketCode,
+      checkedInAt: eventRegistrations.checkedInAt,
       createdAt: eventRegistrations.createdAt,
       eventId: events.id,
       eventSlug: events.slug,
@@ -74,7 +105,10 @@ export async function listMyRegistrations(): Promise<MyRegistration[]> {
     .innerJoin(events, eq(eventRegistrations.eventId, events.id))
     .where(
       and(
-        eq(eventRegistrations.userId, session.user.id),
+        or(
+          eq(eventRegistrations.userId, session.user.id),
+          eq(eventRegistrations.email, session.user.email.toLowerCase()),
+        ),
         ne(eventRegistrations.status, "cancelled"),
       ),
     )
@@ -83,6 +117,8 @@ export async function listMyRegistrations(): Promise<MyRegistration[]> {
   return rows.map((row) => ({
     id: row.id,
     status: row.status,
+    ticketCode: row.ticketCode,
+    checkedInAt: row.checkedInAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     event: {
       id: row.eventId,
@@ -92,6 +128,87 @@ export async function listMyRegistrations(): Promise<MyRegistration[]> {
       status: row.eventStatus,
     },
   }));
+}
+
+export async function getMyEventTicket(
+  registrationId: string,
+): Promise<MyEventTicket | null> {
+  if (!isDatabaseConfigured()) return null;
+  const session = await getSession();
+  if (!session) return null;
+
+  const db = getDb();
+  if (!db) return null;
+
+  const [row] = await db
+    .select({
+      id: eventRegistrations.id,
+      ticketCode: eventRegistrations.ticketCode,
+      status: eventRegistrations.status,
+      checkedInAt: eventRegistrations.checkedInAt,
+      firstName: eventRegistrations.firstName,
+      lastName: eventRegistrations.lastName,
+      email: eventRegistrations.email,
+      year: eventRegistrations.year,
+      branch: eventRegistrations.branch,
+      userId: eventRegistrations.userId,
+      eventId: events.id,
+      eventSlug: events.slug,
+      eventTitle: events.title,
+      eventVenue: events.venue,
+      eventStartsAt: events.startsAt,
+      eventEndsAt: events.endsAt,
+    })
+    .from(eventRegistrations)
+    .innerJoin(events, eq(eventRegistrations.eventId, events.id))
+    .where(eq(eventRegistrations.id, registrationId))
+    .limit(1);
+
+  if (!row || row.status === "cancelled") return null;
+
+  const owns =
+    row.userId === session.user.id ||
+    row.email.toLowerCase() === session.user.email.toLowerCase();
+  if (!owns) return null;
+
+  let ticketCode = row.ticketCode;
+  if (!ticketCode) {
+    ticketCode = createTicketCode();
+    await db
+      .update(eventRegistrations)
+      .set({
+        ticketCode,
+        userId: row.userId ?? session.user.id,
+      })
+      .where(eq(eventRegistrations.id, row.id));
+  } else if (!row.userId) {
+    await db
+      .update(eventRegistrations)
+      .set({ userId: session.user.id })
+      .where(eq(eventRegistrations.id, row.id));
+  }
+
+  return {
+    id: row.id,
+    ticketCode,
+    checksum: ticketChecksum(ticketCode),
+    qrDataUrl: await ticketQrDataUrl(ticketCode),
+    status: row.status,
+    checkedInAt: row.checkedInAt?.toISOString() ?? null,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    email: row.email,
+    year: row.year,
+    branch: row.branch,
+    event: {
+      id: row.eventId,
+      slug: row.eventSlug,
+      title: row.eventTitle,
+      venue: row.eventVenue ?? "",
+      startsAt: row.eventStartsAt.toISOString(),
+      endsAt: row.eventEndsAt.toISOString(),
+    },
+  };
 }
 
 export async function listMyPathwayProgress(): Promise<PathwayProgressSummary[]> {

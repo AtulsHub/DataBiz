@@ -26,7 +26,7 @@ export default async function AdminSponsorsPage() {
             Sponsors
           </h1>
           <p className="mt-2 max-w-xl text-mute">
-            Logos on `/sponsors` and the brochure download target.
+            Logos on `/sponsors`. Brochure page is `/brochure`; optional PDF override below.
           </p>
         </div>
         {dbReady ? (

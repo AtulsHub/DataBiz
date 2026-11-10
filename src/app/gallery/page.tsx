@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { listGalleryPhotos } from "@/lib/event-photos";
+import {
+  groupGalleryByEvent,
+  listGalleryPhotos,
+} from "@/lib/event-photos";
 import { formatDate } from "@/lib/utils";
+import { GalleryImage } from "@/components/gallery/GalleryImage";
 import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHero } from "@/components/ui/PageHero";
@@ -15,11 +18,12 @@ export const metadata: Metadata = {
   description: "Photos from DataBiz events and sessions at NIT Bhopal.",
 };
 
-async function GalleryGrid() {
+async function GallerySections() {
   await connection();
   const photos = await listGalleryPhotos();
+  const sections = groupGalleryByEvent(photos);
 
-  if (photos.length === 0) {
+  if (sections.length === 0) {
     return (
       <EmptyState
         label="Gallery"
@@ -31,42 +35,55 @@ async function GalleryGrid() {
   }
 
   return (
-    <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {photos.map((photo, i) => (
-        <li key={photo.id}>
-          <Reveal y={12} delay={0.03 * Math.min(i, 8)}>
-            <Link
-              href={`/events/${photo.eventSlug}`}
-              className="group block overflow-hidden rounded-[var(--radius)] border border-line bg-paper-elevated transition-colors hover:border-ink"
-            >
-              {photo.url ? (
-                <Image
-                  src={photo.url}
-                  alt={photo.caption || photo.eventTitle}
-                  width={800}
-                  height={500}
-                  sizes="(min-width: 1024px) 22rem, (min-width: 640px) 45vw, 100vw"
-                  className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                />
-              ) : (
-                <div className="aspect-[4/3] w-full bg-panel" aria-hidden />
-              )}
-              <div className="space-y-1 p-4">
+    <div className="space-y-16 sm:space-y-20">
+      {sections.map((section, sectionIndex) => (
+        <Reveal key={section.eventId} y={14} delay={0.04 * Math.min(sectionIndex, 6)}>
+          <section aria-labelledby={`gallery-event-${section.eventId}`}>
+            <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
+              <div>
                 <p className="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-mute">
-                  {formatDate(photo.eventStartsAt)}
+                  {formatDate(section.eventStartsAt)}
                 </p>
-                <p className="font-medium text-ink group-hover:text-ember">
-                  {photo.eventTitle}
-                </p>
-                {photo.caption ? (
-                  <p className="text-sm text-steel">{photo.caption}</p>
-                ) : null}
+                <h2
+                  id={`gallery-event-${section.eventId}`}
+                  className="mt-1 font-display text-2xl font-semibold tracking-tight text-ink"
+                >
+                  {section.eventTitle}
+                </h2>
               </div>
-            </Link>
-          </Reveal>
-        </li>
+              <Link
+                href={`/events/${section.eventSlug}`}
+                className="text-sm font-medium text-ember hover:underline"
+              >
+                Event page
+              </Link>
+            </div>
+
+            <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {section.photos.map((photo) => (
+                <li
+                  key={photo.id}
+                  className="overflow-hidden rounded-[var(--radius)] border border-line bg-paper-elevated"
+                >
+                  {photo.url ? (
+                    <GalleryImage
+                      src={photo.url}
+                      alt={photo.caption || photo.eventTitle}
+                      caption={photo.caption || photo.eventTitle}
+                    />
+                  ) : (
+                    <div className="aspect-[4/3] w-full bg-panel" aria-hidden />
+                  )}
+                  {photo.caption ? (
+                    <p className="p-4 text-sm text-steel">{photo.caption}</p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </Reveal>
       ))}
-    </ul>
+    </div>
   );
 }
 
@@ -77,12 +94,12 @@ export default function GalleryPage() {
         index="07"
         label="Gallery"
         title="What the room looked like."
-        description="Photos from workshops, talks, and DataBrew sessions — open to everyone, linked back to each event."
+        description="Photos from workshops, talks, and DataBrew sessions — grouped by event."
       />
       <section className="py-16 sm:py-20">
         <Container>
           <Suspense fallback={<p className="text-sm text-mute">Loading gallery…</p>}>
-            <GalleryGrid />
+            <GallerySections />
           </Suspense>
         </Container>
       </section>

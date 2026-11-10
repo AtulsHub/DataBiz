@@ -67,8 +67,10 @@ export async function getBrochurePublicId(): Promise<string | null> {
 export async function getBrochureDownloadUrl(): Promise<string | undefined> {
   const { site } = await import("@/content/site");
   const publicId = await getBrochurePublicId();
-  const value = publicId || site.brochureUrl;
+  // Prefer admin override; otherwise the static PDF on this site.
+  const value = publicId || site.brochurePdfUrl;
   if (!value) return undefined;
+  if (value.startsWith("/")) return value;
   if (/^https?:\/\//i.test(value)) return value;
   try {
     return signedPrivateFileUrl(value, { expiresInSeconds: 60 * 30 });

@@ -17,6 +17,12 @@ type Props = {
     year?: string;
     branch?: string;
   };
+  /** When set, email is locked to the signed-in account. */
+  lockedEmail?: string;
+  existingTicket?: {
+    id: string;
+    ticketCode: string | null;
+  } | null;
   databaseReady: boolean;
 };
 
@@ -27,26 +33,79 @@ export function EventRsvpForm({
   eventTitle,
   eventSlug,
   defaults,
+  lockedEmail,
+  existingTicket,
   databaseReady,
 }: Props) {
   const [state, formAction, pending] = useActionState(registerForEvent, initial);
+  const emailValue = lockedEmail || defaults?.email || "";
 
   if (!databaseReady) {
     return (
       <MailtoRsvpFallback
         eventTitle={eventTitle}
         eventSlug={eventSlug}
-        defaults={defaults}
+        defaults={{ ...defaults, email: emailValue || defaults?.email }}
       />
+    );
+  }
+
+  if (existingTicket && !state.ok) {
+    return (
+      <div className="space-y-3 text-sm leading-relaxed" role="status">
+        <p className="text-signal-deep">
+          You&apos;re already registered
+          {existingTicket.ticketCode ? (
+            <>
+              {" "}
+              · ticket{" "}
+              <span className="font-mono">{existingTicket.ticketCode}</span>
+            </>
+          ) : null}
+          .
+        </p>
+        <p>
+          <a
+            href={`/account/tickets/${existingTicket.id}`}
+            className="font-medium text-ember hover:underline"
+          >
+            Open your virtual ID
+          </a>{" "}
+          for door check-in.
+        </p>
+      </div>
     );
   }
 
   if (state.ok) {
     return (
-      <p className="text-sm leading-relaxed text-signal-deep" role="status">
-        You&apos;re registered. Check your inbox for a confirmation — we&apos;ll
-        also remind you the day before.
-      </p>
+      <div className="space-y-3 text-sm leading-relaxed" role="status">
+        <p className="text-signal-deep">
+          You&apos;re registered
+          {state.ticketCode ? (
+            <>
+              {" "}
+              · ticket <span className="font-mono">{state.ticketCode}</span>
+            </>
+          ) : null}
+          . Check your inbox for confirmation.
+        </p>
+        {state.ticketId ? (
+          <p>
+            <a
+              href={`/account/tickets/${state.ticketId}`}
+              className="font-medium text-ember hover:underline"
+            >
+              Open your virtual ID
+            </a>{" "}
+            for door check-in.
+          </p>
+        ) : (
+          <p className="text-mute">
+            Sign in with the same email to see your virtual ID on Account.
+          </p>
+        )}
+      </div>
     );
   }
 
@@ -58,6 +117,9 @@ export function EventRsvpForm({
       aria-label={`RSVP for ${eventTitle}`}
     >
       <input type="hidden" name="eventId" value={eventId} />
+      {lockedEmail ? (
+        <input type="hidden" name="email" value={lockedEmail} />
+      ) : null}
       {state.error ? (
         <p className="text-xs text-danger" role="alert">
           {state.error}
@@ -98,14 +160,22 @@ export function EventRsvpForm({
         label="Email"
         required
         error={state.fieldErrors?.email}
+        hint={
+          lockedEmail
+            ? "Using your signed-in college email."
+            : undefined
+        }
       >
         <input
           id="rsvp-email"
-          name="email"
+          name={lockedEmail ? undefined : "email"}
           type="email"
           required
-          defaultValue={defaults?.email}
-          className={inputClass}
+          readOnly={Boolean(lockedEmail)}
+          defaultValue={emailValue}
+          className={
+            lockedEmail ? `${inputClass} bg-paper text-mute` : inputClass
+          }
         />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">

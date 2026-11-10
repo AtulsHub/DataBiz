@@ -2,12 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { brochure } from "@/content/brochure";
 import { sponsorsCopy } from "@/content/pages";
 import { site } from "@/content/site";
-import {
-  getBrochureDownloadUrl,
-  listSponsors,
-} from "@/lib/sponsors";
+import { listSponsors } from "@/lib/sponsors";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { DeskLabel } from "@/components/ui/DeskLabel";
@@ -24,7 +22,6 @@ export const metadata: Metadata = {
 async function SponsorsBody() {
   await connection();
   const sponsors = await listSponsors();
-  const brochureUrl = await getBrochureDownloadUrl();
 
   return (
     <>
@@ -117,30 +114,17 @@ async function SponsorsBody() {
           <div className="self-end border border-on-void-line bg-void-soft/40 p-6">
             <DeskLabel tone="inverse">Brochure</DeskLabel>
             <p className="mt-3 leading-relaxed text-on-void-soft">
-              {brochureUrl
-                ? "Download the sponsorship brochure as a PDF."
-                : "The sponsorship brochure hasn't been published yet. Email the core and we'll send it directly."}
+              Read packages, fest context, and partnership options on the
+              dedicated brochure page — or download the PDF.
             </p>
-            {brochureUrl ? (
-              <Button
-                href={brochureUrl}
-                external
-                variant="inverse"
-                size="md"
-                className="mt-5"
-              >
-                Download brochure
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button href="/brochure" variant="inverse" size="md">
+                Open brochure
               </Button>
-            ) : (
-              <Button
-                href={`mailto:${site.email}?subject=Sponsorship%20brochure`}
-                variant="inverse"
-                size="md"
-                className="mt-5"
-              >
-                Request the brochure
+              <Button href={brochure.pdfHref} external variant="link" className="text-on-void">
+                PDF
               </Button>
-            )}
+            </div>
           </div>
         </Container>
       </section>

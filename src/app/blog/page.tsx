@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
@@ -35,46 +36,56 @@ async function BlogContent() {
               body="Members' writing will be published here after core review."
             />
           ) : (
-            <ul className="divide-y divide-line border-y border-line">
+            <ul className="grid gap-8 sm:gap-10">
               {posts.map((post, i) => (
                 <li key={post.slug}>
-                  <Reveal y={10} delay={0.03 * i}>
+                  <Reveal y={12} delay={0.03 * Math.min(i, 8)}>
                     <Link
                       href={`/blog/${post.slug}`}
-                      className="group grid gap-4 py-9 transition-colors hover:bg-paper-elevated/80 lg:grid-cols-[12rem_1fr] lg:gap-10 lg:px-2"
+                      className="group grid overflow-hidden border border-line bg-paper-elevated transition-[border-color,transform] duration-300 hover:border-ink sm:grid-cols-[minmax(0,16rem)_1fr]"
                     >
-                      <div className="font-mono text-xs uppercase tracking-[0.12em] text-steel">
-                        <time
-                          dateTime={post.publishedAt}
-                          className="text-signal"
-                        >
-                          {formatDate(post.publishedAt)}
-                        </time>
-                        <p className="mt-1">
-                          {readingTime(post.body)} min read
-                        </p>
-                        <p className="mt-1">By {post.author}</p>
+                      <div className="relative aspect-[16/11] bg-panel sm:aspect-auto sm:min-h-[12rem]">
+                        {post.coverUrl ? (
+                          <Image
+                            src={post.coverUrl}
+                            alt=""
+                            fill
+                            sizes="(min-width: 640px) 16rem, 100vw"
+                            className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                          />
+                        ) : (
+                          <div
+                            aria-hidden
+                            className="absolute inset-0 bg-[linear-gradient(145deg,color-mix(in_srgb,var(--ember)_22%,transparent),transparent_55%),var(--panel)]"
+                          />
+                        )}
                       </div>
-                      <div>
-                        <h2 className="font-serif text-3xl font-semibold leading-tight tracking-tight group-hover:text-signal sm:text-4xl text-balance">
+                      <div className="flex flex-col justify-center p-5 sm:p-7">
+                        <p className="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-mute">
+                          {formatDate(post.publishedAt)} ·{" "}
+                          {readingTime(post.body)} min · {post.author}
+                        </p>
+                        <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight text-ink transition-colors group-hover:text-ember sm:text-3xl text-balance">
                           {post.title}
                         </h2>
-                        <p className="mt-3 max-w-2xl text-lg leading-relaxed text-steel">
+                        <p className="mt-3 max-w-2xl text-base leading-relaxed text-mute sm:text-lg">
                           {post.excerpt}
                         </p>
-                        <ul
-                          className="mt-4 flex flex-wrap gap-2"
-                          aria-label="Tags"
-                        >
-                          {post.tags.map((tag) => (
-                            <li
-                              key={tag}
-                              className="rounded-[var(--radius)] bg-signal-soft px-2 py-0.5 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-signal-deep"
-                            >
-                              {tag}
-                            </li>
-                          ))}
-                        </ul>
+                        {post.tags.length > 0 ? (
+                          <ul
+                            className="mt-4 flex flex-wrap gap-2"
+                            aria-label="Tags"
+                          >
+                            {post.tags.map((tag) => (
+                              <li
+                                key={tag}
+                                className="rounded-sm border border-line px-2 py-0.5 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-mute"
+                              >
+                                {tag}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
                       </div>
                     </Link>
                   </Reveal>

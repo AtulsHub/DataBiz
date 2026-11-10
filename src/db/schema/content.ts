@@ -63,6 +63,9 @@ export const eventRegistrations = pgTable(
     year: text("year").notNull(),
     branch: text("branch").notNull(),
     status: text("status").notNull().default("registered"),
+    /** Short unique code encoded in the virtual ID / QR for door check-in. */
+    ticketCode: text("ticket_code").unique(),
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("event_reg_event_email_uidx").on(t.eventId, t.email)],

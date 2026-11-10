@@ -93,14 +93,25 @@ export default async function AdminEventDetailPage({ params }: Props) {
       </section>
 
       <section>
-        <h2 className="font-display text-2xl font-semibold tracking-tight">
-          RSVPs
-        </h2>
-        <p className="mt-2 text-sm text-mute">
-          {registrations.filter((r) => r.status === "registered").length}{" "}
-          registered ·{" "}
-          {registrations.filter((r) => r.status === "attended").length} attended
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="font-display text-2xl font-semibold tracking-tight">
+              RSVPs
+            </h2>
+            <p className="mt-2 text-sm text-mute">
+              {registrations.filter((r) => r.status === "registered").length}{" "}
+              registered ·{" "}
+              {registrations.filter((r) => r.status === "attended").length}{" "}
+              attended
+            </p>
+          </div>
+          <Link
+            href={`/admin/events/${event.id}/check-in`}
+            className="text-sm font-medium text-ember hover:underline"
+          >
+            Open door check-in
+          </Link>
+        </div>
         <div className="mt-6">
           <EventRegistrationsTable registrations={registrations} />
         </div>

@@ -12,6 +12,8 @@ import { Field, inputClass } from "@/components/forms/Field";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
+type UploadedItem = { publicId: string; url: string };
+
 type Props = {
   /** When set, stores the Cloudinary public id in a hidden form field. */
   name?: string;
@@ -20,8 +22,10 @@ type Props = {
   hint?: string;
   defaultPublicId?: string;
   defaultPreviewUrl?: string;
-  /** Called after a successful upload with the Cloudinary secure URL. */
-  onUploaded?: (result: { publicId: string; url: string }) => void;
+  /** Allow selecting and uploading several images at once. */
+  multiple?: boolean;
+  /** Called after each successful upload. */
+  onUploaded?: (result: UploadedItem) => void;
   clearLabel?: string;
   showPreview?: boolean;
   /** Override the default admin-only signer (e.g. public alumni avatar). */
@@ -35,40 +39,32 @@ export function ImageUpload({
   hint = "Max 5 MB. JPG, PNG, or WebP.",
   defaultPublicId,
   defaultPreviewUrl,
+  multiple = false,
   onUploaded,
   clearLabel = "Clear image",
   showPreview = true,
   signAction = signPublicImageUpload,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [publicId, setPublicId] = useState(defaultPublicId ?? "");
-  const [previewUrl, setPreviewUrl] = useState(defaultPreviewUrl ?? "");
+  const [items, setItems] = useState<UploadedItem[]>(() => {
+    if (defaultPublicId) {
+      return [
+        {
+          publicId: defaultPublicId,
+          url: defaultPreviewUrl ?? "",
+        },
+      ];
+    }
+    return [];
+  });
   const [error, setError] = useState<string | undefined>();
   const [pending, setPending] = useState(false);
+  const [progress, setProgress] = useState("");
 
-  async function onFileChange(fileList: FileList | null) {
-    const file = fileList?.[0];
-    if (!file) return;
-
-    setError(undefined);
-
-    if (!file.type.startsWith("image/")) {
-      setError("Choose an image file.");
-      return;
-    }
-    if (file.size > MAX_BYTES) {
-      setError("Images must be 5 MB or smaller.");
-      return;
-    }
-
-    setPending(true);
-    const signed: SignUploadResult = await signAction(folder);
-    if (!signed.ok) {
-      setPending(false);
-      setError(signed.error);
-      return;
-    }
-
+  async function uploadOne(
+    file: File,
+    signed: Extract<SignUploadResult, { ok: true }>,
+  ): Promise<UploadedItem> {
     const body = new FormData();
     body.append("file", file);
     body.append("api_key", signed.upload.apiKey);
@@ -79,44 +75,118 @@ export function ImageUpload({
       body.append("access_mode", "authenticated");
     }
 
-    try {
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${signed.upload.cloudName}/${signed.upload.resourceType}/upload`,
-        { method: "POST", body },
-      );
-      const json = (await response.json()) as {
-        public_id?: string;
-        secure_url?: string;
-        error?: { message?: string };
-      };
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${signed.upload.cloudName}/${signed.upload.resourceType}/upload`,
+      { method: "POST", body },
+    );
+    const json = (await response.json()) as {
+      public_id?: string;
+      secure_url?: string;
+      error?: { message?: string };
+    };
 
-      if (!response.ok || !json.public_id) {
-        throw new Error(json.error?.message || "Upload failed.");
+    if (!response.ok || !json.public_id) {
+      throw new Error(json.error?.message || "Upload failed.");
+    }
+
+    return {
+      publicId: json.public_id,
+      url: json.secure_url || "",
+    };
+  }
+
+  async function onFileChange(fileList: FileList | null) {
+    const files = fileList ? Array.from(fileList) : [];
+    if (files.length === 0) return;
+
+    setError(undefined);
+
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) {
+        setError("Choose image files only.");
+        return;
       }
+      if (file.size > MAX_BYTES) {
+        setError("Each image must be 5 MB or smaller.");
+        return;
+      }
+    }
 
-      const url = json.secure_url || "";
-      setPublicId(json.public_id);
-      setPreviewUrl(url);
-      onUploaded?.({ publicId: json.public_id, url });
-      if (inputRef.current) inputRef.current.value = "";
+    setPending(true);
+    const nextItems: UploadedItem[] = multiple ? [...items] : [];
+
+    try {
+      for (let i = 0; i < files.length; i += 1) {
+        const file = files[i]!;
+        setProgress(
+          multiple
+            ? `Uploading ${i + 1} of ${files.length}…`
+            : "Uploading…",
+        );
+
+        const signed: SignUploadResult = await signAction(folder);
+        if (!signed.ok) {
+          setError(signed.error);
+          break;
+        }
+
+        const uploaded = await uploadOne(file, signed);
+        if (multiple) {
+          nextItems.push(uploaded);
+          setItems([...nextItems]);
+        } else {
+          nextItems.splice(0, nextItems.length, uploaded);
+          setItems([uploaded]);
+        }
+        onUploaded?.(uploaded);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setPending(false);
+      setProgress("");
+      if (inputRef.current) inputRef.current.value = "";
     }
   }
 
   const fieldId = `${name ?? folder}-file`;
+  const publicIdsJson = JSON.stringify(items.map((item) => item.publicId));
 
   return (
     <div className="space-y-3">
-      {name ? <input type="hidden" name={name} value={publicId} /> : null}
-      <Field id={fieldId} label={label} hint={hint} error={error}>
+      {name ? (
+        multiple ? (
+          <>
+            <input type="hidden" name={`${name}s`} value={publicIdsJson} />
+            {items.map((item) => (
+              <input
+                key={item.publicId}
+                type="hidden"
+                name={name}
+                value={item.publicId}
+              />
+            ))}
+          </>
+        ) : (
+          <input type="hidden" name={name} value={items[0]?.publicId ?? ""} />
+        )
+      ) : null}
+      <Field
+        id={fieldId}
+        label={label}
+        hint={
+          multiple
+            ? `${hint} Select several files at once.`
+            : hint
+        }
+        error={error}
+      >
         <input
           ref={inputRef}
           id={fieldId}
           type="file"
           accept="image/*"
+          multiple={multiple}
           disabled={pending}
           onChange={(e) => void onFileChange(e.target.files)}
           className={inputClass}
@@ -127,10 +197,9 @@ export function ImageUpload({
           type="button"
           variant="ghost"
           size="sm"
-          disabled={pending || (!publicId && !previewUrl)}
+          disabled={pending || items.length === 0}
           onClick={() => {
-            setPublicId("");
-            setPreviewUrl("");
+            setItems([]);
             setError(undefined);
             if (inputRef.current) inputRef.current.value = "";
           }}
@@ -138,19 +207,42 @@ export function ImageUpload({
           {clearLabel}
         </Button>
         {pending ? (
-          <p className="text-sm text-mute">Uploading…</p>
-        ) : name && publicId ? (
-          <p className="font-mono text-xs text-mute">{publicId}</p>
+          <p className="text-sm text-mute">{progress || "Uploading…"}</p>
+        ) : items.length > 0 ? (
+          <p className="font-mono text-xs text-mute">
+            {multiple
+              ? `${items.length} photo${items.length === 1 ? "" : "s"} ready`
+              : items[0]?.publicId}
+          </p>
         ) : null}
       </div>
-      {showPreview && previewUrl ? (
-        <Image
-          src={previewUrl}
-          alt=""
-          width={640}
-          height={360}
-          className="h-auto w-full max-w-md border border-line"
-        />
+      {showPreview && items.length > 0 ? (
+        <ul
+          className={
+            multiple
+              ? "grid grid-cols-2 gap-3 sm:grid-cols-3"
+              : "space-y-3"
+          }
+        >
+          {items.map((item) =>
+            item.url ? (
+              <li key={item.publicId}>
+                <Image
+                  src={item.url}
+                  alt=""
+                  width={640}
+                  height={360}
+                  draggable={false}
+                  className={
+                    multiple
+                      ? "aspect-[4/3] w-full border border-line object-cover"
+                      : "h-auto w-full max-w-md border border-line"
+                  }
+                />
+              </li>
+            ) : null,
+          )}
+        </ul>
       ) : null}
     </div>
   );

@@ -13,11 +13,14 @@ import { rateLimit } from "@/lib/rate-limit";
 import { clampToDraftIfNeeded } from "@/lib/publish";
 import { requireAdmin, requireDesk, getSession } from "@/lib/session";
 import { slugify } from "@/lib/slug";
+import { createTicketCode, parseTicketCode } from "@/lib/tickets";
 
 export type ActionResult = {
   ok: boolean;
   error?: string;
   fieldErrors?: Record<string, string>;
+  ticketId?: string;
+  ticketCode?: string;
 };
 
 const optionalUrl = z
@@ -308,11 +311,15 @@ export async function registerForEvent(
   const blocked = requireEventsDb();
   if (blocked) return blocked;
 
+  const session = await getSession();
+  const sessionEmail = session?.user.email?.trim().toLowerCase() || "";
+
   const parsed = rsvpFields.safeParse({
     eventId: formData.get("eventId"),
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
-    email: formData.get("email"),
+    // Logged-in RSVPs always use the session email so the form default sticks.
+    email: sessionEmail || formData.get("email"),
     year: formData.get("year"),
     branch: formData.get("branch"),
   });
@@ -337,11 +344,19 @@ export async function registerForEvent(
 
   try {
     const db = getDb()!;
-    const [event] = await db
+    const eventKey = parsed.data.eventId;
+    let [event] = await db
       .select()
       .from(events)
-      .where(eq(events.id, parsed.data.eventId))
+      .where(eq(events.id, eventKey))
       .limit(1);
+    if (!event) {
+      [event] = await db
+        .select()
+        .from(events)
+        .where(eq(events.slug, eventKey))
+        .limit(1);
+    }
 
     if (!event || event.status !== "published") {
       return { ok: false, error: "This event is not open for RSVP." };
@@ -381,11 +396,24 @@ export async function registerForEvent(
       )
       .limit(1);
 
+    // Already registered — treat as success so a prior email failure doesn't
+    // look like a broken RSVP on retry.
     if (existing && existing.status !== "cancelled") {
-      return { ok: false, error: "This email is already registered for the event." };
+      revalidatePath(`/events/${event.slug}`);
+      revalidatePath("/account");
+      revalidatePath(`/account/tickets/${existing.id}`);
+      return {
+        ok: true,
+        ticketId: existing.id,
+        ticketCode: existing.ticketCode ?? undefined,
+      };
     }
 
-    const session = await getSession();
+    const ticketCode =
+      existing?.ticketCode && existing.status === "cancelled"
+        ? existing.ticketCode
+        : createTicketCode();
+
     const payload = {
       firstName: parsed.data.firstName,
       lastName: parsed.data.lastName,
@@ -394,7 +422,11 @@ export async function registerForEvent(
       branch: parsed.data.branch,
       userId: session?.user.id ?? null,
       status: "registered" as const,
+      ticketCode,
+      checkedInAt: null as Date | null,
     };
+
+    let registrationId = existing?.id;
 
     if (existing) {
       await db
@@ -402,30 +434,45 @@ export async function registerForEvent(
         .set(payload)
         .where(eq(eventRegistrations.id, existing.id));
     } else {
+      registrationId = crypto.randomUUID();
       await db.insert(eventRegistrations).values({
-        id: crypto.randomUUID(),
+        id: registrationId,
         eventId: event.id,
         ...payload,
         createdAt: new Date(),
       });
     }
 
-    await sendTransactionalEmail({
-      to: email,
-      subject: `RSVP confirmed · ${event.title}`,
-      html: `
-        <p>Hi ${parsed.data.firstName},</p>
-        <p>You are registered for <strong>${event.title}</strong>.</p>
-        <p>We will email a reminder the day before. See the event page for venue and timing.</p>
-      `,
-    });
+    const ticketUrl = `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://www.databiz.in"}/account/tickets/${registrationId}`;
+
+    try {
+      await sendTransactionalEmail({
+        to: email,
+        subject: `RSVP confirmed · ${event.title}`,
+        html: `
+          <p>Hi ${parsed.data.firstName},</p>
+          <p>You are registered for <strong>${event.title}</strong>.</p>
+          <p>Your door ticket code is <strong>${ticketCode}</strong>. Show the virtual ID at entry:</p>
+          <p><a href="${ticketUrl}">${ticketUrl}</a></p>
+          <p>We will email a reminder the day before. See the event page for venue and timing.</p>
+        `,
+      });
+    } catch (mailError) {
+      console.error("[rsvp] confirmation email failed", mailError);
+    }
 
     revalidatePath(`/events/${event.slug}`);
     revalidatePath("/account");
+    revalidatePath(`/account/tickets/${registrationId}`);
     revalidatePath(`/admin/events/${event.id}`);
 
-    return { ok: true };
+    return {
+      ok: true,
+      ticketId: registrationId,
+      ticketCode,
+    };
   } catch (error) {
+    console.error("[rsvp] registerForEvent failed", error);
     return {
       ok: false,
       error:
@@ -453,7 +500,15 @@ export async function setRegistrationStatus(
 
   await db
     .update(eventRegistrations)
-    .set({ status })
+    .set({
+      status,
+      checkedInAt:
+        status === "attended"
+          ? row.checkedInAt ?? new Date()
+          : status === "registered"
+            ? null
+            : row.checkedInAt,
+    })
     .where(eq(eventRegistrations.id, registrationId));
 
   const [event] = await db
@@ -465,7 +520,105 @@ export async function setRegistrationStatus(
   if (event) {
     revalidatePath(`/events/${event.slug}`);
     revalidatePath(`/admin/events/${event.id}`);
+    revalidatePath(`/admin/events/${event.id}/check-in`);
   }
 
   return { ok: true };
+}
+
+export type CheckInResult =
+  | {
+      ok: true;
+      alreadyCheckedIn: boolean;
+      name: string;
+      email: string;
+      ticketCode: string;
+      eventTitle: string;
+      checkedInAt: string;
+    }
+  | { ok: false; error: string };
+
+export async function checkInByTicketCode(
+  rawCode: string,
+  eventId?: string,
+): Promise<CheckInResult> {
+  await requireDesk();
+  const blocked = requireEventsDb();
+  if (blocked) return { ok: false, error: blocked.error || "Database not ready." };
+
+  const ticketCode = parseTicketCode(rawCode);
+  if (!ticketCode) {
+    return {
+      ok: false,
+      error: "That does not look like a DataBiz ticket code.",
+    };
+  }
+
+  const db = getDb()!;
+  const [row] = await db
+    .select({
+      id: eventRegistrations.id,
+      eventId: eventRegistrations.eventId,
+      firstName: eventRegistrations.firstName,
+      lastName: eventRegistrations.lastName,
+      email: eventRegistrations.email,
+      status: eventRegistrations.status,
+      ticketCode: eventRegistrations.ticketCode,
+      checkedInAt: eventRegistrations.checkedInAt,
+      eventTitle: events.title,
+      eventSlug: events.slug,
+    })
+    .from(eventRegistrations)
+    .innerJoin(events, eq(eventRegistrations.eventId, events.id))
+    .where(eq(eventRegistrations.ticketCode, ticketCode))
+    .limit(1);
+
+  if (!row || !row.ticketCode) {
+    return { ok: false, error: "No registration found for that ticket." };
+  }
+
+  if (eventId && row.eventId !== eventId) {
+    return {
+      ok: false,
+      error: `This ticket is for “${row.eventTitle}”, not this event.`,
+    };
+  }
+
+  if (row.status === "cancelled") {
+    return { ok: false, error: "This registration was cancelled." };
+  }
+
+  if (row.status === "attended" && row.checkedInAt) {
+    return {
+      ok: true,
+      alreadyCheckedIn: true,
+      name: `${row.firstName} ${row.lastName}`,
+      email: row.email,
+      ticketCode: row.ticketCode,
+      eventTitle: row.eventTitle,
+      checkedInAt: row.checkedInAt.toISOString(),
+    };
+  }
+
+  const checkedInAt = new Date();
+  await db
+    .update(eventRegistrations)
+    .set({ status: "attended", checkedInAt })
+    .where(eq(eventRegistrations.id, row.id));
+
+  revalidatePath(`/events/${row.eventSlug}`);
+  revalidatePath(`/admin/events/${row.eventId}`);
+  revalidatePath(`/admin/events/${row.eventId}/check-in`);
+  revalidatePath(`/account/tickets/${row.id}`);
+  revalidatePath("/account");
+
+  return {
+    ok: true,
+    alreadyCheckedIn: false,
+    name: `${row.firstName} ${row.lastName}`,
+    email: row.email,
+    ticketCode: row.ticketCode,
+    eventTitle: row.eventTitle,
+    checkedInAt: checkedInAt.toISOString(),
+  };
 }

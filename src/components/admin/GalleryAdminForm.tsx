@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useTransition } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -9,8 +8,12 @@ import {
   deleteEventPhoto,
 } from "@/app/actions/event-photos";
 import type { ActionResult } from "@/app/actions/events";
-import type { GalleryPhotoItem } from "@/lib/event-photos";
+import {
+  groupGalleryByEvent,
+  type GalleryPhotoItem,
+} from "@/lib/event-photos";
 import { CLOUDINARY_FOLDERS } from "@/lib/cloudinary-folders";
+import { GalleryImage } from "@/components/gallery/GalleryImage";
 import { Button } from "@/components/ui/Button";
 import { Field, inputClass } from "@/components/forms/Field";
 import { ImageUpload } from "@/components/admin/ImageUpload";
@@ -33,6 +36,7 @@ export function GalleryAdminForm({ events, photos }: Props) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(addGalleryPhoto, initial);
   const [deleting, startDelete] = useTransition();
+  const sections = groupGalleryByEvent(photos);
 
   useEffect(() => {
     if (state.ok) router.refresh();
@@ -46,11 +50,11 @@ export function GalleryAdminForm({ events, photos }: Props) {
       >
         <div>
           <h2 className="font-display text-xl font-semibold tracking-tight">
-            Upload a gallery photo
+            Upload gallery photos
           </h2>
           <p className="mt-1 text-sm text-mute">
-            Photos are tied to an event and appear on `/gallery` once that event
-            is published or marked past.
+            Pick an event, then select one or many images. They appear on
+            `/gallery` once that event is published or marked past.
           </p>
         </div>
 
@@ -61,7 +65,7 @@ export function GalleryAdminForm({ events, photos }: Props) {
         ) : null}
         {state.ok ? (
           <p className="text-sm text-ember" role="status">
-            Photo added to the gallery.
+            Photos added to the gallery.
           </p>
         ) : null}
 
@@ -95,77 +99,90 @@ export function GalleryAdminForm({ events, photos }: Props) {
             <ImageUpload
               name="publicId"
               folder={CLOUDINARY_FOLDERS.gallery}
-              label="Photo"
-              hint="Max 5 MB. JPG, PNG, or WebP."
-              clearLabel="Clear"
+              label="Photos"
+              hint="Max 5 MB each. JPG, PNG, or WebP."
+              clearLabel="Clear all"
+              multiple
             />
             <Field id="caption" label="Caption">
-              <input id="caption" name="caption" className={inputClass} />
+              <input
+                id="caption"
+                name="caption"
+                className={inputClass}
+                placeholder="Optional — applied to every photo in this upload"
+              />
             </Field>
             <Button type="submit" variant="ember" disabled={pending}>
-              {pending ? "Uploading…" : "Add to gallery"}
+              {pending ? "Saving…" : "Add to gallery"}
             </Button>
           </>
         )}
       </form>
 
-      <section>
+      <section className="space-y-10">
         <h2 className="font-display text-xl font-semibold tracking-tight">
-          All gallery photos
+          Gallery by event
         </h2>
-        {photos.length === 0 ? (
-          <p className="mt-4 text-sm text-mute">No photos uploaded yet.</p>
+        {sections.length === 0 ? (
+          <p className="text-sm text-mute">No photos uploaded yet.</p>
         ) : (
-          <ul className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {photos.map((photo) => (
-              <li
-                key={photo.id}
-                className="overflow-hidden border border-line bg-paper-elevated"
-              >
-                {photo.url ? (
-                  <Image
-                    src={photo.url}
-                    alt={photo.caption || photo.eventTitle}
-                    width={640}
-                    height={400}
-                    className="aspect-[4/3] w-full object-cover"
-                  />
-                ) : (
-                  <div className="aspect-[4/3] bg-panel" aria-hidden />
-                )}
-                <div className="space-y-2 p-4">
-                  <p className="text-sm font-medium text-ink">
-                    {photo.eventTitle}
+          sections.map((section) => (
+            <div key={section.eventId} className="space-y-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line pb-3">
+                <div>
+                  <h3 className="font-display text-lg font-semibold tracking-tight">
+                    {section.eventTitle}
+                  </h3>
+                  <p className="mt-1 text-sm text-mute">
+                    {section.photos.length} photo
+                    {section.photos.length === 1 ? "" : "s"}
                   </p>
-                  <p className="text-sm text-mute">
-                    {photo.caption || "No caption"}
-                  </p>
-                  <div className="flex flex-wrap gap-3 pt-1">
-                    <Link
-                      href={`/admin/events/${photo.eventId}`}
-                      className="text-sm text-ember hover:underline"
-                    >
-                      Edit event
-                    </Link>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={deleting}
-                      onClick={() => {
-                        startDelete(async () => {
-                          await deleteEventPhoto(photo.id, photo.eventId);
-                          router.refresh();
-                        });
-                      }}
-                    >
-                      Remove
-                    </Button>
-                  </div>
                 </div>
-              </li>
-            ))}
-          </ul>
+                <Link
+                  href={`/admin/events/${section.eventId}`}
+                  className="text-sm text-ember hover:underline"
+                >
+                  Edit event
+                </Link>
+              </div>
+              <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {section.photos.map((photo) => (
+                  <li
+                    key={photo.id}
+                    className="overflow-hidden border border-line bg-paper-elevated"
+                  >
+                    {photo.url ? (
+                      <GalleryImage
+                        src={photo.url}
+                        alt={photo.caption || photo.eventTitle}
+                      />
+                    ) : (
+                      <div className="aspect-[4/3] bg-panel" aria-hidden />
+                    )}
+                    <div className="space-y-2 p-4">
+                      <p className="text-sm text-mute">
+                        {photo.caption || "No caption"}
+                      </p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={deleting}
+                        onClick={() => {
+                          startDelete(async () => {
+                            await deleteEventPhoto(photo.id, photo.eventId);
+                            router.refresh();
+                          });
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
         )}
       </section>
     </div>

@@ -14,9 +14,10 @@ export const site = {
     instagram: "https://www.instagram.com/databiz_nitb",
     x: null as string | null,
   },
-  /** Sponsorship brochure (Google Drive direct download). */
-  brochureUrl:
-    "https://drive.google.com/uc?export=download&id=1NefJk_rRlJCi6ur0IF0yG_sZ7TYSUove",
+  /** In-app sponsorship brochure page. */
+  brochureUrl: "/brochure",
+  /** Printable PDF served from /public. */
+  brochurePdfUrl: "/brochure/databiz-sponsorship.pdf",
   values: [
     {
       title: "Learn by doing",
@@ -65,6 +66,7 @@ export const navMore = [
   { href: "/alumni", label: "Alumni" },
   { href: "/announcements", label: "Announcements" },
   { href: "/sponsors", label: "Sponsors" },
+  { href: "/brochure", label: "Brochure" },
   { href: "/contact", label: "Contact" },
   { href: "/account", label: "Account" },
 ] as const;
@@ -98,6 +100,7 @@ export const footerCols = [
       { href: "/about", label: "About" },
       { href: "/announcements", label: "Announcements" },
       { href: "/sponsors", label: "Sponsors" },
+      { href: "/brochure", label: "Brochure" },
       { href: "/contact", label: "Contact" },
     ],
   },
@@ -140,8 +143,8 @@ export const homeExplore = [
     body: "Interview recordings and notes.",
   },
   {
-    href: "/sponsors",
-    label: "Sponsors",
-    body: "Brochure and how to partner with us.",
+    href: "/brochure",
+    label: "Brochure",
+    body: "Packages and how to partner with us.",
   },
 ] as const;
