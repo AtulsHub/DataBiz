@@ -1,56 +1,31 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { requireAdmin } from "@/lib/session";
-import { Container } from "@/components/ui/Container";
-
-const links = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/events", label: "Events" },
-  { href: "/admin/show", label: "DataBrew" },
-  { href: "/admin/posts", label: "Posts" },
-  { href: "/admin/learn", label: "Pathways" },
-  { href: "/admin/drives", label: "Drives" },
-  { href: "/admin/newsletter", label: "Newsletter" },
-  { href: "/admin/announcements", label: "Announcements" },
-  { href: "/admin/sponsors", label: "Sponsors" },
-  { href: "/admin/resources", label: "Resources" },
-  { href: "/admin/alumni", label: "Alumni" },
-  { href: "/admin/users", label: "Users" },
-] as const;
+import { requireDesk } from "@/lib/session";
+import { canAccessAdmin, canPublish } from "@/lib/roles";
+import { AdminNav } from "@/components/admin/AdminNav";
+import { DeskProvider } from "@/components/admin/DeskContext";
 
 async function AdminShell({ children }: { children: React.ReactNode }) {
   await connection();
-  const session = await requireAdmin();
+  const session = await requireDesk();
+  const role = session.user.role;
+  const caps = {
+    role,
+    canPublish: canPublish(role),
+    isAdmin: canAccessAdmin(role),
+  };
 
   return (
-    <div className="min-h-full border-b border-line bg-paper">
-      <div className="border-b border-line bg-paper-elevated">
-        <Container className="flex flex-wrap items-center justify-between gap-4 py-4">
-          <div>
-            <p className="eyebrow">Admin</p>
-            <p className="mt-1 text-sm text-mute">
-              Signed in as {session.user.email}
-            </p>
-          </div>
-          <nav className="flex flex-wrap gap-4 text-sm font-medium">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-mute transition-colors hover:text-ink"
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link href="/account" className="text-ember hover:underline">
-              Account
-            </Link>
-          </nav>
-        </Container>
+    <DeskProvider value={caps}>
+      <div className="min-h-full bg-paper lg:flex">
+        <AdminNav
+          email={session.user.email}
+          role={role}
+          isAdmin={caps.isAdmin}
+        />
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
-      {children}
-    </div>
+    </DeskProvider>
   );
 }
 
@@ -62,10 +37,8 @@ export default function AdminLayout({
   return (
     <Suspense
       fallback={
-        <div className="min-h-full border-b border-line bg-paper">
-          <Container className="py-12 text-sm text-mute">
-            Checking admin session…
-          </Container>
+        <div className="min-h-full bg-paper px-6 py-12 text-sm text-mute">
+          Checking desk session…
         </div>
       }
     >

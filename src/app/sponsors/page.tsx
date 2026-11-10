@@ -76,7 +76,7 @@ async function SponsorsBody() {
         </Container>
       </section>
 
-      <section className="bg-panel py-16 text-white sm:py-24">
+      <section className="bg-void py-16 text-on-void sm:py-24">
         <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
           <div>
             <DeskLabel index="02" tone="inverse">
@@ -85,7 +85,7 @@ async function SponsorsBody() {
             <h2 className="mt-3 font-display text-3xl font-bold tracking-[-0.03em] text-balance sm:text-5xl">
               Write to the core.
             </h2>
-            <p className="mt-4 max-w-lg leading-relaxed text-white/70">
+            <p className="mt-4 max-w-lg leading-relaxed text-on-void-soft">
               Tell us what you&apos;d like to support — a session, a fest, or the
               society&apos;s year-round work — and we&apos;ll reply with options.
             </p>
@@ -113,9 +113,9 @@ async function SponsorsBody() {
             </div>
           </div>
 
-          <div className="self-end border border-white/15 p-6">
+          <div className="self-end border border-on-void-line bg-void-soft/40 p-6">
             <DeskLabel tone="inverse">Brochure</DeskLabel>
-            <p className="mt-3 leading-relaxed text-white/70">
+            <p className="mt-3 leading-relaxed text-on-void-soft">
               {brochureUrl
                 ? "Download the sponsorship brochure as a PDF."
                 : "The sponsorship brochure hasn't been published yet. Email the core and we'll send it directly."}

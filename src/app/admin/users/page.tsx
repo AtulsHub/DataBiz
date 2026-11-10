@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin-guard";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { desc } from "drizzle-orm";
 import { Container } from "@/components/ui/Container";
+import { UserRoleSelect } from "@/components/admin/UserRoleSelect";
 import { getDb, isDatabaseConfigured } from "@/db";
 import { user } from "@/db/schema";
+import { isRole, type Role } from "@/lib/roles";
 import { formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Admin · Users" };
@@ -29,8 +32,8 @@ async function UsersTable() {
 
   return (
     <div className="mt-10 overflow-x-auto border border-line">
-      <table className="w-full min-w-[36rem] text-left text-sm">
-        <thead className="border-b border-line bg-paper-elevated font-mono text-[0.65rem] uppercase tracking-[0.14em] text-steel">
+      <table className="w-full min-w-[40rem] text-left text-sm">
+        <thead className="border-b border-line bg-paper-elevated font-mono text-[0.65rem] uppercase tracking-[0.14em] text-mute">
           <tr>
             <th className="px-3 py-2 font-medium">Email</th>
             <th className="px-3 py-2 font-medium">Roll</th>
@@ -39,33 +42,39 @@ async function UsersTable() {
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
-          {rows.map((row) => (
-            <tr key={row.id}>
-              <td className="px-3 py-3">{row.email}</td>
-              <td className="px-3 py-3 font-mono text-xs">
-                {row.rollNumber ?? "—"}
-              </td>
-              <td className="px-3 py-3 capitalize">{row.role}</td>
-              <td className="px-3 py-3 text-mute">
-                {formatDateTime(row.createdAt.toISOString())}
-              </td>
-            </tr>
-          ))}
+          {rows.map((row) => {
+            const role: Role = isRole(row.role) ? row.role : "applicant";
+            return (
+              <tr key={row.id}>
+                <td className="px-3 py-3">{row.email}</td>
+                <td className="px-3 py-3 font-mono text-xs">
+                  {row.rollNumber ?? "—"}
+                </td>
+                <td className="px-3 py-3">
+                  <UserRoleSelect userId={row.id} role={role} />
+                </td>
+                <td className="px-3 py-3 text-mute">
+                  {formatDateTime(row.createdAt.toISOString())}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
   );
 }
 
-export default function AdminUsersPage() {
+export default async function AdminUsersPage() {
+  await requireAdminPage();
   return (
     <Container className="py-12">
       <h1 className="font-display text-3xl font-semibold tracking-tight">
         Users
       </h1>
       <p className="mt-3 max-w-xl text-mute">
-        Role changes from this screen ship next. Your admin account is already
-        set in the database.
+        Promote applicants to member, interviewer, or admin. Changes apply on
+        the next request.
       </p>
       <Suspense fallback={<p className="mt-8 text-sm text-mute">Loading users…</p>}>
         <UsersTable />

@@ -40,8 +40,15 @@ module.exports = {
           ink: "#ffffff",
         },
         panel: {
-          DEFAULT: "var(--void)",
+          DEFAULT: "var(--panel)",
           soft: "var(--void-soft)",
+          ink: "var(--panel-ink)",
+        },
+        "on-void": {
+          DEFAULT: "var(--on-void)",
+          soft: "var(--on-void-soft)",
+          mute: "var(--on-void-mute)",
+          line: "var(--on-void-line)",
         },
       },
       fontFamily: {
@@ -59,6 +66,11 @@ module.exports = {
       },
       transitionTimingFunction: {
         field: "cubic-bezier(0.16, 1, 0.3, 1)",
+      },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
+        lift: "var(--shadow-lift)",
+        ember: "var(--shadow-ember)",
       },
     },
   },

@@ -27,7 +27,7 @@ export function NewsletterForm() {
           type="email"
           required
           placeholder="you@email.com"
-          className="h-11 flex-1 rounded-sm border border-white/15 bg-void-soft px-3 text-sm text-paper placeholder:text-white/35 focus:border-ember focus:outline-none"
+          className="h-11 flex-1 rounded-sm border border-[color:var(--on-void-line)] bg-void-soft px-3 text-sm text-[color:var(--on-void)] placeholder:text-[color:var(--on-void-mute)] focus:border-ember focus:outline-none"
         />
         <Button
           type="submit"
@@ -47,7 +47,7 @@ export function NewsletterForm() {
         </p>
       ) : null}
       {!state.ok && state.error ? (
-        <p className="text-sm text-red-300" role="alert">
+        <p className="text-sm text-[#ffb4a8]" role="alert">
           {state.error}
         </p>
       ) : null}

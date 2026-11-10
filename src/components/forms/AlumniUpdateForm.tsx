@@ -2,8 +2,11 @@
 
 import { useActionState } from "react";
 import { submitAlumniUpdate } from "@/app/actions/alumni";
+import { signAlumniAvatarUpload } from "@/app/actions/media";
 import type { ActionResult } from "@/app/actions/events";
+import { CLOUDINARY_FOLDERS } from "@/lib/cloudinary-folders";
 import { Button } from "@/components/ui/Button";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 import { Field, inputClass, textareaClass } from "./Field";
 import { site } from "@/content/site";
 
@@ -144,6 +147,14 @@ export function AlumniUpdateForm() {
       >
         <textarea id="alumni-note" name="note" className={textareaClass} />
       </Field>
+      <ImageUpload
+        name="photoPublicId"
+        folder={CLOUDINARY_FOLDERS.avatars}
+        label="Photo (optional)"
+        hint="Max 5 MB. JPG, PNG, or WebP. Reviewed with your update."
+        clearLabel="Clear photo"
+        signAction={signAlumniAvatarUpload}
+      />
       <div className="flex flex-wrap items-center gap-4">
         <Button type="submit" variant="primary" size="md" disabled={pending}>
           {pending ? "Sending…" : "Send update"}

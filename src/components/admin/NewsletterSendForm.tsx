@@ -2,11 +2,12 @@
 
 import { useActionState } from "react";
 import {
-  sendNewsletter,
+  submitNewsletterDraft,
   type NewsletterActionResult,
 } from "@/app/actions/newsletter";
 import { Button } from "@/components/ui/Button";
 import { Field, inputClass, textareaClass } from "@/components/forms/Field";
+import { useDesk } from "@/components/admin/DeskContext";
 
 type Props = {
   confirmedCount: number;
@@ -25,7 +26,11 @@ export function NewsletterSendForm({
   sourceType,
   sourceId,
 }: Props) {
-  const [state, formAction, pending] = useActionState(sendNewsletter, initial);
+  const { canPublish } = useDesk();
+  const [state, formAction, pending] = useActionState(
+    submitNewsletterDraft,
+    initial,
+  );
 
   return (
     <form action={formAction} className="space-y-5">
@@ -41,7 +46,7 @@ export function NewsletterSendForm({
       ) : null}
       {state.ok && state.message ? (
         <p
-          className="border border-line bg-paper px-3 py-2 text-sm text-signal-deep"
+          className="border border-line bg-paper px-3 py-2 text-sm text-ember"
           role="status"
         >
           {state.message}
@@ -52,6 +57,9 @@ export function NewsletterSendForm({
         Recipients:{" "}
         <span className="font-mono text-ink">{confirmedCount}</span> confirmed
         subscriber{confirmedCount === 1 ? "" : "s"}.
+        {!canPublish
+          ? " Your draft waits for an admin before anyone is mailed."
+          : null}
       </p>
 
       <Field id="subject" label="Subject" required error={state.fieldErrors?.subject}>
@@ -81,8 +89,18 @@ export function NewsletterSendForm({
         />
       </Field>
 
-      <Button type="submit" variant="ember" disabled={pending || confirmedCount === 0}>
-        {pending ? "Sending…" : "Send to confirmed list"}
+      <Button
+        type="submit"
+        variant="ember"
+        disabled={pending || (canPublish && confirmedCount === 0)}
+      >
+        {pending
+          ? canPublish
+            ? "Sending…"
+            : "Submitting…"
+          : canPublish
+            ? "Send to confirmed list"
+            : "Submit for admin approval"}
       </Button>
     </form>
   );

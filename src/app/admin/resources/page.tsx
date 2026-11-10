@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin-guard";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -7,6 +8,7 @@ import { isResourcesDbReady, listResources } from "@/lib/resources";
 export const metadata: Metadata = { title: "Admin · Resources" };
 
 export default async function AdminResourcesPage() {
+  await requireAdminPage();
   const dbReady = isResourcesDbReady();
   const items = dbReady ? await listResources() : [];
 

@@ -1,14 +1,14 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { HomeHero } from "@/components/home/HomeHero";
+import { HomeExplore } from "@/components/home/HomeExplore";
 import { HomeIndex } from "@/components/home/HomeIndex";
-import { HomePathways } from "@/components/home/HomePathways";
+import { HomeSponsorsApproach } from "@/components/home/HomeSponsorsApproach";
 import { HomeMission } from "@/components/home/HomeMission";
 import { HomeContactStrip } from "@/components/home/HomeContactStrip";
 import { getNextEvent, getPastEvents } from "@/lib/events";
 import { getPublishedPosts } from "@/lib/posts";
 import { getLatestEpisode } from "@/lib/episodes";
-import { getPublishedPathways } from "@/lib/pathways";
 import { getOpenDrive } from "@/lib/drives";
 
 async function HomeContent() {
@@ -19,7 +19,6 @@ async function HomeContent() {
   const publishedPosts = await getPublishedPosts();
   const latestPost = publishedPosts[0] ?? null;
   const latestEpisode = await getLatestEpisode();
-  const pathways = (await getPublishedPathways()).slice(0, 3);
   const openDrive = await getOpenDrive();
 
   return (
@@ -27,13 +26,14 @@ async function HomeContent() {
       <HomeHero
         recruitingHref={openDrive ? `/join/${openDrive.slug}` : null}
       />
+      <HomeExplore />
       <HomeIndex
         nextEvent={nextEvent}
         latestPost={latestPost}
         latestEpisode={latestEpisode}
         pastEvent={pastEvent}
       />
-      <HomePathways pathways={pathways} />
+      <HomeSponsorsApproach />
       <HomeMission />
       <HomeContactStrip />
     </>

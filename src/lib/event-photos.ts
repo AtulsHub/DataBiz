@@ -1,6 +1,6 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
-import { eventPhotos } from "@/db/schema";
+import { eventPhotos, events } from "@/db/schema";
 import { mediaUrl } from "@/lib/media";
 
 export type EventPhotoItem = {
@@ -10,6 +10,12 @@ export type EventPhotoItem = {
   url?: string;
   caption: string;
   sortOrder: number;
+};
+
+export type GalleryPhotoItem = EventPhotoItem & {
+  eventSlug: string;
+  eventTitle: string;
+  eventStartsAt: string;
 };
 
 function mapRow(row: typeof eventPhotos.$inferSelect): EventPhotoItem {
@@ -34,4 +40,108 @@ export async function listEventPhotos(
     .where(eq(eventPhotos.eventId, eventId))
     .orderBy(asc(eventPhotos.sortOrder));
   return rows.map(mapRow);
+}
+
+/** Admin gallery: all event photos, newest events first. */
+export async function listAdminGalleryPhotos(): Promise<GalleryPhotoItem[]> {
+  const db = getDb();
+  if (!db) return [];
+
+  const allEvents = await db
+    .select({
+      id: events.id,
+      slug: events.slug,
+      title: events.title,
+      startsAt: events.startsAt,
+    })
+    .from(events)
+    .orderBy(desc(events.startsAt));
+
+  if (allEvents.length === 0) return [];
+
+  const eventMap = new Map(allEvents.map((e) => [e.id, e]));
+  const rows = await db
+    .select()
+    .from(eventPhotos)
+    .where(
+      inArray(
+        eventPhotos.eventId,
+        allEvents.map((e) => e.id),
+      ),
+    )
+    .orderBy(asc(eventPhotos.sortOrder));
+
+  const items: GalleryPhotoItem[] = [];
+  for (const row of rows) {
+    const event = eventMap.get(row.eventId);
+    if (!event) continue;
+    items.push({
+      ...mapRow(row),
+      eventSlug: event.slug,
+      eventTitle: event.title,
+      eventStartsAt: event.startsAt.toISOString(),
+    });
+  }
+
+  items.sort((a, b) => {
+    const byEvent =
+      new Date(b.eventStartsAt).getTime() - new Date(a.eventStartsAt).getTime();
+    if (byEvent !== 0) return byEvent;
+    return a.sortOrder - b.sortOrder;
+  });
+
+  return items;
+}
+
+/** Public gallery: photos from non-draft events, newest events first. */
+export async function listGalleryPhotos(): Promise<GalleryPhotoItem[]> {
+  const db = getDb();
+  if (!db) return [];
+
+  const publicEvents = await db
+    .select({
+      id: events.id,
+      slug: events.slug,
+      title: events.title,
+      startsAt: events.startsAt,
+    })
+    .from(events)
+    .where(inArray(events.status, ["past", "published"]))
+    .orderBy(desc(events.startsAt));
+
+  if (publicEvents.length === 0) return [];
+
+  const eventMap = new Map(publicEvents.map((e) => [e.id, e]));
+  const rows = await db
+    .select()
+    .from(eventPhotos)
+    .where(
+      inArray(
+        eventPhotos.eventId,
+        publicEvents.map((e) => e.id),
+      ),
+    )
+    .orderBy(asc(eventPhotos.sortOrder));
+
+  const items: GalleryPhotoItem[] = [];
+  for (const row of rows) {
+    const event = eventMap.get(row.eventId);
+    if (!event) continue;
+    items.push({
+      ...mapRow(row),
+      eventSlug: event.slug,
+      eventTitle: event.title,
+      eventStartsAt: event.startsAt.toISOString(),
+    });
+  }
+
+  // Keep photos grouped by event order (newest event first).
+  items.sort((a, b) => {
+    const byEvent =
+      new Date(b.eventStartsAt).getTime() - new Date(a.eventStartsAt).getTime();
+    if (byEvent !== 0) return byEvent;
+    return a.sortOrder - b.sortOrder;
+  });
+
+  return items;
 }

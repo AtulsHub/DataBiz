@@ -129,9 +129,9 @@ export function AccountPanel() {
         description="Edit your profile, review RSVPs, and track pathway modules from this page."
       >
         <div className="mt-6 flex flex-wrap gap-3">
-          {user.role === "admin" ? (
+          {hasMinRole((user.role as Role) || "applicant", "member") ? (
             <Button href="/admin" variant="ember" size="md">
-              Open admin
+              {user.role === "admin" ? "Open admin" : "Content desk"}
             </Button>
           ) : null}
           {canRunInterviews((user.role as Role) || "applicant") ? (

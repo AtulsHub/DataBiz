@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin-guard";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { isAlumniDbReady, listAdminAlumni } from "@/lib/alumni";
@@ -6,6 +7,7 @@ import { isAlumniDbReady, listAdminAlumni } from "@/lib/alumni";
 export const metadata: Metadata = { title: "Admin · Alumni" };
 
 export default async function AdminAlumniPage() {
+  await requireAdminPage();
   const dbReady = isAlumniDbReady();
   const rows = dbReady ? await listAdminAlumni() : [];
 

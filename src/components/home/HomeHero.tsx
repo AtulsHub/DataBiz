@@ -13,6 +13,15 @@ type Props = {
 export function HomeHero({ recruitingHref }: Props) {
   return (
     <section className="relative isolate min-h-[min(100svh,56rem)] overflow-hidden border-b border-line field-wash">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-20 top-24 h-72 w-72 rounded-full bg-ember/25 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-10 left-1/3 h-48 w-48 rounded-full blur-3xl"
+        style={{ background: "var(--glow-mint)" }}
+      />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-full max-w-3xl opacity-90 md:opacity-100">
         <NetworkFieldLazy />
       </div>
@@ -36,8 +45,13 @@ export function HomeHero({ recruitingHref }: Props) {
             <Button href="/events" variant="primary" size="lg">
               See events
             </Button>
-            <Button href="/learn" variant="ghost" size="lg">
-              Pathways
+            <Button
+              href={site.brochureUrl}
+              external
+              variant="ghost"
+              size="lg"
+            >
+              Download brochure
             </Button>
             <Button href="/about" variant="link" className="gap-1">
               Who we are <ArrowUpRight size={16} />

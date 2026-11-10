@@ -24,6 +24,8 @@ type Props = {
   onUploaded?: (result: { publicId: string; url: string }) => void;
   clearLabel?: string;
   showPreview?: boolean;
+  /** Override the default admin-only signer (e.g. public alumni avatar). */
+  signAction?: (folder: CloudinaryFolder) => Promise<SignUploadResult>;
 };
 
 export function ImageUpload({
@@ -36,6 +38,7 @@ export function ImageUpload({
   onUploaded,
   clearLabel = "Clear image",
   showPreview = true,
+  signAction = signPublicImageUpload,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [publicId, setPublicId] = useState(defaultPublicId ?? "");
@@ -59,7 +62,7 @@ export function ImageUpload({
     }
 
     setPending(true);
-    const signed: SignUploadResult = await signPublicImageUpload(folder);
+    const signed: SignUploadResult = await signAction(folder);
     if (!signed.ok) {
       setPending(false);
       setError(signed.error);

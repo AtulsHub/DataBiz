@@ -10,7 +10,8 @@ import { eventRegistrations, events } from "@/db/schema";
 import { fromDatetimeLocalValue } from "@/lib/datetime";
 import { sendTransactionalEmail } from "@/lib/email";
 import { rateLimit } from "@/lib/rate-limit";
-import { requireAdmin, getSession } from "@/lib/session";
+import { clampToDraftIfNeeded } from "@/lib/publish";
+import { requireAdmin, requireDesk, getSession } from "@/lib/session";
 import { slugify } from "@/lib/slug";
 
 export type ActionResult = {
@@ -194,7 +195,7 @@ export async function createEvent(
   _prev: ActionResult | undefined,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireDesk();
   const blocked = requireEventsDb();
   if (blocked) return blocked;
 
@@ -207,13 +208,18 @@ export async function createEvent(
     };
   }
 
+  const status = clampToDraftIfNeeded(
+    session.user.role,
+    parsed.data.status,
+    "draft",
+  );
+  const data = { ...parsed.data, status };
+
   let id: string;
   try {
     const db = getDb()!;
-    const slug = await uniqueSlug(
-      parsed.data.slug?.trim() || parsed.data.title,
-    );
-    const values = toEventValues(parsed.data, slug);
+    const slug = await uniqueSlug(data.slug?.trim() || data.title);
+    const values = toEventValues(data, slug);
     id = crypto.randomUUID();
 
     await db.insert(events).values({
@@ -239,7 +245,7 @@ export async function updateEvent(
   _prev: ActionResult | undefined,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireDesk();
   const blocked = requireEventsDb();
   if (blocked) return blocked;
 
@@ -252,6 +258,13 @@ export async function updateEvent(
     };
   }
 
+  const status = clampToDraftIfNeeded(
+    session.user.role,
+    parsed.data.status,
+    "draft",
+  );
+  const data = { ...parsed.data, status };
+
   try {
     const db = getDb()!;
     const [existing] = await db
@@ -262,17 +275,13 @@ export async function updateEvent(
 
     if (!existing) return { ok: false, error: "Event not found." };
 
-    const requestedSlug = parsed.data.slug?.trim();
+    const requestedSlug = data.slug?.trim();
     const slug =
       requestedSlug && requestedSlug !== existing.slug
         ? await uniqueSlug(requestedSlug, eventId)
         : existing.slug;
 
-    const values = toEventValues(
-      parsed.data,
-      slug,
-      existing.publishedAt,
-    );
+    const values = toEventValues(data, slug, existing.publishedAt);
 
     await db.update(events).set(values).where(eq(events.id, eventId));
 

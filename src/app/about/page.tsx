@@ -51,7 +51,7 @@ export default function AboutPage() {
       </section>
 
       {/* Mission — dark panel */}
-      <section className="bg-panel py-16 text-white sm:py-24">
+      <section className="bg-void py-16 text-on-void sm:py-24">
         <Container className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
           <DeskLabel index="B" tone="inverse">
             Mission
@@ -64,7 +64,7 @@ export default function AboutPage() {
               {site.approach.map((item) => (
                 <li
                   key={item}
-                  className="rounded-[var(--radius)] border border-white/15 px-3 py-1.5 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-spark"
+                  className="rounded-[var(--radius)] border border-on-void-line px-3 py-1.5 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-ember"
                 >
                   {item}
                 </li>

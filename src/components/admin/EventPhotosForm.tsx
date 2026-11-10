@@ -39,7 +39,7 @@ export function EventPhotosForm({ eventId, photos }: Props) {
           name="publicId"
           folder={CLOUDINARY_FOLDERS.gallery}
           label="Gallery photo"
-          hint="Shown on the past event page."
+          hint="Shown on the past event page and on /gallery."
           clearLabel="Clear"
         />
         <Field id="caption" label="Caption">

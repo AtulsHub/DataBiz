@@ -7,7 +7,8 @@ import { z } from "zod";
 import { getDb, isDatabaseConfigured } from "@/db";
 import { announcements } from "@/db/schema";
 import type { ActionResult } from "@/app/actions/events";
-import { requireAdmin } from "@/lib/session";
+import { clampToDraftIfNeeded } from "@/lib/publish";
+import { requireDesk } from "@/lib/session";
 
 function requireDb(): ActionResult | null {
   if (!isDatabaseConfigured() || !getDb()) {
@@ -64,7 +65,7 @@ export async function createAnnouncement(
   _prev: ActionResult | undefined,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireDesk();
   const blocked = requireDb();
   if (blocked) return blocked;
 
@@ -73,14 +74,19 @@ export async function createAnnouncement(
     return { ok: false, error: parsed.error.issues[0]?.message || "Invalid form." };
   }
 
+  const status = clampToDraftIfNeeded(
+    session.user.role,
+    parsed.data.status,
+    "draft",
+  );
   const id = crypto.randomUUID();
   const refs = refsFromParsed(parsed.data);
   await getDb()!.insert(announcements).values({
     id,
     title: parsed.data.title,
     body: parsed.data.body,
-    status: parsed.data.status,
-    publishedAt: parsed.data.status === "published" ? new Date() : null,
+    status,
+    publishedAt: status === "published" ? new Date() : null,
     ...refs,
   });
 
@@ -95,7 +101,7 @@ export async function updateAnnouncement(
   _prev: ActionResult | undefined,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireDesk();
   const blocked = requireDb();
   if (blocked) return blocked;
 
@@ -104,6 +110,11 @@ export async function updateAnnouncement(
     return { ok: false, error: parsed.error.issues[0]?.message || "Invalid form." };
   }
 
+  const status = clampToDraftIfNeeded(
+    session.user.role,
+    parsed.data.status,
+    "draft",
+  );
   const db = getDb()!;
   const [existing] = await db
     .select()
@@ -118,11 +129,9 @@ export async function updateAnnouncement(
     .set({
       title: parsed.data.title,
       body: parsed.data.body,
-      status: parsed.data.status,
+      status,
       publishedAt:
-        parsed.data.status === "published"
-          ? existing.publishedAt ?? new Date()
-          : null,
+        status === "published" ? existing.publishedAt ?? new Date() : null,
       ...refs,
     })
     .where(eq(announcements.id, id));

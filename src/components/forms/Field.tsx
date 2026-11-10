@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 const control =
-  "w-full rounded-sm border border-line-strong bg-paper-elevated px-3 text-sm text-ink placeholder:text-steel/60 focus:border-signal focus:outline-none";
+  "w-full rounded-sm border border-line-strong bg-paper-elevated px-3 text-sm text-ink placeholder:text-mute focus:border-ember focus:outline-none";
 
 type FieldProps = {
   id: string;
@@ -31,14 +31,14 @@ export function Field({
             *
           </span>
         ) : (
-          <span className="ml-2 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-steel">
+          <span className="ml-2 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-mute">
             Optional
           </span>
         )}
       </label>
       {children}
       {hint && !error ? (
-        <p id={`${id}-hint`} className="text-xs text-steel">
+        <p id={`${id}-hint`} className="text-xs text-mute">
           {hint}
         </p>
       ) : null}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin-guard";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +9,7 @@ import { formatDate } from "@/lib/utils";
 export const metadata: Metadata = { title: "Admin · Drives" };
 
 export default async function AdminDrivesPage() {
+  await requireAdminPage();
   const dbReady = isDrivesDbReady();
   const drives = dbReady ? await listAdminDrives() : [];
 

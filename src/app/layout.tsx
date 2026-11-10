@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Sora, Literata, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { AmbientField } from "@/components/theme/AmbientField";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { site } from "@/content/site";
@@ -53,12 +54,13 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${sora.variable} ${literata.variable} ${jetbrains.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-paper text-ink">
+      <body className="relative flex min-h-full flex-col text-ink">
         <ThemeProvider>
+          <AmbientField />
           <Suspense fallback={<div className="h-[var(--header-h)]" aria-hidden />}>
             <SiteHeader />
           </Suspense>
-          <main className="flex-1">{children}</main>
+          <main className="relative z-0 flex-1">{children}</main>
           <SiteFooter />
         </ThemeProvider>
       </body>

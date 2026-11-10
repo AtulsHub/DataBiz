@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin-guard";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +13,7 @@ import {
 export const metadata: Metadata = { title: "Admin · Sponsors" };
 
 export default async function AdminSponsorsPage() {
+  await requireAdminPage();
   const dbReady = isSponsorsDbReady();
   const sponsors = dbReady ? await listSponsors() : [];
   const brochureId = dbReady ? await getBrochurePublicId() : null;

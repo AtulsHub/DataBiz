@@ -58,13 +58,13 @@ async function JoinContent() {
         <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
           <div
             role="status"
-            className="border border-line-strong bg-panel p-8 text-white sm:p-10"
+            className="border border-line-strong bg-void p-8 text-on-void sm:p-10"
           >
             <DeskLabel tone="inverse">Notice</DeskLabel>
             <h2 className="mt-4 font-display text-3xl font-bold tracking-tight">
               No open drive.
             </h2>
-            <p className="mt-3 max-w-lg leading-relaxed text-white/70">
+            <p className="mt-3 max-w-lg leading-relaxed text-on-void-soft">
               When a drive opens, it appears here and on the home page with
               roles, dates, and how the assessment and interviews work.
               Applicants sign in with an @stu.manit.ac.in address.

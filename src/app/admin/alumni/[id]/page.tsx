@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin-guard";
 import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { AlumniEditorForm } from "@/components/admin/AlumniEditorForm";
@@ -15,6 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AdminAlumniDetailPage({ params }: Props) {
+  await requireAdminPage();
   if (!isAlumniDbReady()) redirect("/admin/alumni");
   const { id } = await params;
   const alumni = await getAdminAlumni(id);

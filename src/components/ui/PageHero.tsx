@@ -22,11 +22,25 @@ export function PageHero({
   return (
     <header
       className={cn(
-        "relative overflow-hidden border-b border-line bg-paper pt-12 pb-12 sm:pt-16 sm:pb-16",
+        "relative overflow-hidden border-b border-line hero-wash pt-12 pb-12 sm:pt-16 sm:pb-16",
         className,
       )}
     >
-      <Container>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-16 top-0 h-64 w-64 rounded-full bg-ember/20 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-12 bottom-0 h-48 w-48 rounded-full blur-3xl"
+        style={{ background: "var(--glow-cool)" }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-1/3 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full blur-3xl"
+        style={{ background: "var(--glow-mint)" }}
+      />
+      <Container className="relative">
         <p className="eyebrow">{label}</p>
         <div
           className={cn(

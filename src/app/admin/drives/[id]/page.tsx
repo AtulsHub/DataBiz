@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin-guard";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
@@ -32,6 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AdminDriveDetailPage({ params }: Props) {
+  await requireAdminPage();
   if (!isDrivesDbReady()) redirect("/admin/drives");
   const { id } = await params;
   const drive = await getAdminDrive(id);

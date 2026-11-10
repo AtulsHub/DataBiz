@@ -1,7 +1,12 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getAuth, isAuthConfigured } from "@/lib/auth";
-import { canAccessAdmin, isRole, type Role } from "@/lib/roles";
+import {
+  canAccessAdmin,
+  canAccessDesk,
+  isRole,
+  type Role,
+} from "@/lib/roles";
 
 export type SessionUser = {
   id: string;
@@ -56,6 +61,16 @@ export async function requireSession(callbackURL = "/account") {
   return session;
 }
 
+/** Content desk: members, interviewers, and admins. */
+export async function requireDesk() {
+  const session = await requireSession("/admin");
+  if (!canAccessDesk(session.user.role)) {
+    redirect("/account");
+  }
+  return session;
+}
+
+/** Sensitive ops: publish, send mail, roles, hiring, roster. */
 export async function requireAdmin() {
   const session = await requireSession("/admin");
   if (!canAccessAdmin(session.user.role)) {

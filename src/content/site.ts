@@ -14,6 +14,9 @@ export const site = {
     instagram: "https://www.instagram.com/databiz_nitb",
     x: null as string | null,
   },
+  /** Sponsorship brochure (Google Drive direct download). */
+  brochureUrl:
+    "https://drive.google.com/uc?export=download&id=1NefJk_rRlJCi6ur0IF0yG_sZ7TYSUove",
   values: [
     {
       title: "Learn by doing",
@@ -40,60 +43,105 @@ export const site = {
   ],
 } as const;
 
-/** Primary chrome — DataBrew is an event format, not a top-level destination. */
+/**
+ * Desktop primary nav — keep short.
+ * Join stays a header CTA.
+ */
 export const navPrimary = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
   { href: "/events", label: "Events" },
-  { href: "/blog", label: "Blog" },
   { href: "/learn", label: "Learn" },
+  { href: "/blog", label: "Blog" },
+  { href: "/gallery", label: "Gallery" },
   { href: "/work", label: "Work" },
+  { href: "/about", label: "About" },
 ] as const;
 
-export const navSecondary = [
+/** Extra links for mobile drawer (after primary). */
+export const navMore = [
+  { href: "/join", label: "Join" },
+  { href: "/show", label: "DataBrew" },
   { href: "/team", label: "Team" },
   { href: "/alumni", label: "Alumni" },
-  { href: "/join", label: "Join" },
-  { href: "/sponsors", label: "Sponsors" },
   { href: "/announcements", label: "Announcements" },
+  { href: "/sponsors", label: "Sponsors" },
   { href: "/contact", label: "Contact" },
+  { href: "/account", label: "Account" },
 ] as const;
 
+/** @deprecated Prefer navMore — kept for any leftover imports. */
+export const navSecondary = navMore;
+
 export const footerCols = [
-  {
-    title: "Explore",
-    links: [
-      { href: "/", label: "Home" },
-      { href: "/about", label: "About" },
-      { href: "/team", label: "Team" },
-      { href: "/work", label: "Work" },
-      { href: "/alumni", label: "Alumni" },
-    ],
-  },
   {
     title: "Programs",
     links: [
       { href: "/events", label: "Events" },
       { href: "/learn", label: "Pathways" },
       { href: "/blog", label: "Blog" },
+      { href: "/show", label: "DataBrew" },
       { href: "/join", label: "Join" },
+    ],
+  },
+  {
+    title: "People & work",
+    links: [
+      { href: "/team", label: "Team" },
+      { href: "/alumni", label: "Alumni" },
+      { href: "/work", label: "Projects" },
+      { href: "/gallery", label: "Gallery" },
     ],
   },
   {
     title: "Society",
     links: [
-      { href: "/sponsors", label: "Sponsors" },
+      { href: "/about", label: "About" },
       { href: "/announcements", label: "Announcements" },
-      { href: "/faq", label: "FAQ" },
+      { href: "/sponsors", label: "Sponsors" },
       { href: "/contact", label: "Contact" },
     ],
   },
   {
-    title: "Legal",
+    title: "Help",
     links: [
+      { href: "/faq", label: "FAQ" },
       { href: "/guidelines", label: "Guidelines" },
       { href: "/privacy", label: "Privacy" },
       { href: "/terms", label: "Terms" },
     ],
+  },
+] as const;
+
+/** Home “Explore” strip — destinations visitors should find in one glance. */
+export const homeExplore = [
+  {
+    href: "/events",
+    label: "Events",
+    body: "Sessions, workshops, and RSVPs.",
+  },
+  {
+    href: "/join",
+    label: "Join",
+    body: "Open drives and how to apply.",
+  },
+  {
+    href: "/gallery",
+    label: "Gallery",
+    body: "Photos from society sessions.",
+  },
+  {
+    href: "/blog",
+    label: "Blog",
+    body: "Long-form from members.",
+  },
+  {
+    href: "/show",
+    label: "DataBrew",
+    body: "Interview recordings and notes.",
+  },
+  {
+    href: "/sponsors",
+    label: "Sponsors",
+    body: "Brochure and how to partner with us.",
   },
 ] as const;

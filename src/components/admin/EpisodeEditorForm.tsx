@@ -9,6 +9,7 @@ import { CLOUDINARY_FOLDERS } from "@/lib/cloudinary-folders";
 import { Button } from "@/components/ui/Button";
 import { Field, inputClass, textareaClass } from "@/components/forms/Field";
 import { ImageUpload } from "@/components/admin/ImageUpload";
+import { PublishActions } from "@/components/admin/PublishActions";
 
 type EventOption = {
   id: string;
@@ -316,40 +317,11 @@ export function EpisodeEditorForm({ episode, events }: Props) {
         </ul>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          type="submit"
-          name="intent"
-          value="publish"
-          variant="ember"
-          disabled={pending}
-        >
-          {pending ? "Saving…" : "Publish"}
-        </Button>
-        <Button
-          type="submit"
-          name="intent"
-          value="draft"
-          variant="ghost"
-          disabled={pending}
-        >
-          Save draft
-        </Button>
-        {isPublished ? (
-          <Button href={`/show/${episode!.slug}`} variant="ghost">
-            View public page
-          </Button>
-        ) : episode ? (
-          <p className="text-sm text-mute">
-            Public URL opens after you click{" "}
-            <span className="font-medium text-ink">Publish</span>.
-          </p>
-        ) : (
-          <Link href="/admin/show" className="text-sm text-mute hover:text-ink">
-            Cancel
-          </Link>
-        )}
-      </div>
+      <PublishActions
+        pending={pending}
+        cancelHref={episode ? undefined : "/admin/show"}
+        publicHref={isPublished ? `/show/${episode!.slug}` : undefined}
+      />
     </form>
   );
 }

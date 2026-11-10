@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin-guard";
 import { redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { DriveEditorForm } from "@/components/admin/DriveEditorForm";
@@ -6,7 +7,8 @@ import { isDrivesDbReady } from "@/lib/drives";
 
 export const metadata: Metadata = { title: "Admin · New drive" };
 
-export default function AdminNewDrivePage() {
+export default async function AdminNewDrivePage() {
+  await requireAdminPage();
   if (!isDrivesDbReady()) redirect("/admin/drives");
   return (
     <Container className="py-12">

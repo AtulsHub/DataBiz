@@ -6,7 +6,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getDb, isDatabaseConfigured } from "@/db";
 import { episodeGuests, episodes } from "@/db/schema";
-import { requireAdmin } from "@/lib/session";
+import { clampToDraftIfNeeded } from "@/lib/publish";
+import { requireDesk } from "@/lib/session";
 import { slugify } from "@/lib/slug";
 import type { ActionResult } from "@/app/actions/events";
 
@@ -149,7 +150,7 @@ export async function createEpisode(
   _prev: ActionResult | undefined,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireDesk();
   const blocked = requireEpisodesDb();
   if (blocked) return blocked;
 
@@ -162,6 +163,11 @@ export async function createEpisode(
     };
   }
 
+  const status = clampToDraftIfNeeded(
+    session.user.role,
+    parsed.data.status,
+    "draft",
+  );
   const guests = parseGuests(formData);
   let id: string;
   let slug: string;
@@ -175,13 +181,13 @@ export async function createEpisode(
       slug,
       summary: parsed.data.summary,
       showNotes: parsed.data.showNotes,
-      status: parsed.data.status,
+      status,
       provider: parsed.data.provider,
       embedUrl: parsed.data.embedUrl || null,
       externalUrl: parsed.data.externalUrl || null,
       coverPublicId: parsed.data.coverPublicId || null,
       eventId: parsed.data.eventId || null,
-      publishedAt: parsed.data.status === "published" ? new Date() : null,
+      publishedAt: status === "published" ? new Date() : null,
     });
     await replaceGuests(id, guests);
   } catch (error) {
@@ -202,7 +208,7 @@ export async function updateEpisode(
   _prev: ActionResult | undefined,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireDesk();
   const blocked = requireEpisodesDb();
   if (blocked) return blocked;
 
@@ -215,6 +221,11 @@ export async function updateEpisode(
     };
   }
 
+  const status = clampToDraftIfNeeded(
+    session.user.role,
+    parsed.data.status,
+    "draft",
+  );
   const guests = parseGuests(formData);
 
   try {
@@ -239,16 +250,14 @@ export async function updateEpisode(
         slug,
         summary: parsed.data.summary,
         showNotes: parsed.data.showNotes,
-        status: parsed.data.status,
+        status,
         provider: parsed.data.provider,
         embedUrl: parsed.data.embedUrl || null,
         externalUrl: parsed.data.externalUrl || null,
         coverPublicId: parsed.data.coverPublicId || null,
         eventId: parsed.data.eventId || null,
         publishedAt:
-          parsed.data.status === "published"
-            ? existing.publishedAt ?? new Date()
-            : null,
+          status === "published" ? existing.publishedAt ?? new Date() : null,
       })
       .where(eq(episodes.id, episodeId));
 

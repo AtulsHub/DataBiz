@@ -16,6 +16,16 @@ export function hasMinRole(role: Role, minimum: Role) {
   return rank[role] >= rank[minimum];
 }
 
+/** Members and above can open the content desk (/admin). */
+export function canAccessDesk(role: Role | null | undefined) {
+  return Boolean(role && hasMinRole(role, "member"));
+}
+
+/** Only admins can publish, send mail, change roles, or manage sensitive ops. */
+export function canPublish(role: Role | null | undefined) {
+  return role === "admin";
+}
+
 export function canAccessAdmin(role: Role | null | undefined) {
   return role === "admin";
 }

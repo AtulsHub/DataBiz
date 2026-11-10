@@ -9,6 +9,7 @@ import { CLOUDINARY_FOLDERS } from "@/lib/cloudinary-folders";
 import { Button } from "@/components/ui/Button";
 import { Field, inputClass, textareaClass } from "@/components/forms/Field";
 import { ImageUpload } from "@/components/admin/ImageUpload";
+import { PublishActions } from "@/components/admin/PublishActions";
 
 type Props = { post?: PostItem };
 
@@ -154,40 +155,11 @@ export function PostEditorForm({ post }: Props) {
         />
       </Field>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          type="submit"
-          name="intent"
-          value="publish"
-          variant="ember"
-          disabled={pending}
-        >
-          {pending ? "Saving…" : "Publish"}
-        </Button>
-        <Button
-          type="submit"
-          name="intent"
-          value="draft"
-          variant="ghost"
-          disabled={pending}
-        >
-          Save draft
-        </Button>
-        {isPublished ? (
-          <Button href={`/blog/${post!.slug}`} variant="ghost">
-            View public page
-          </Button>
-        ) : post ? (
-          <p className="text-sm text-mute">
-            Public URL opens after you click{" "}
-            <span className="font-medium text-ink">Publish</span>.
-          </p>
-        ) : (
-          <Link href="/admin/posts" className="text-sm text-mute hover:text-ink">
-            Cancel
-          </Link>
-        )}
-      </div>
+      <PublishActions
+        pending={pending}
+        cancelHref={post ? undefined : "/admin/posts"}
+        publicHref={isPublished ? `/blog/${post!.slug}` : undefined}
+      />
     </form>
   );
 }

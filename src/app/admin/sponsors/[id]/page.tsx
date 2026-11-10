@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin-guard";
 import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { SponsorEditorForm } from "@/components/admin/SponsorEditorForm";
@@ -15,6 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AdminSponsorDetailPage({ params }: Props) {
+  await requireAdminPage();
   if (!isSponsorsDbReady()) redirect("/admin/sponsors");
   const { id } = await params;
   const sponsor = await getAdminSponsor(id);

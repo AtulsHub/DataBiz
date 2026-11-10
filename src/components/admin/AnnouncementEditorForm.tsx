@@ -8,8 +8,8 @@ import {
 } from "@/app/actions/announcements";
 import type { ActionResult } from "@/app/actions/events";
 import type { AnnouncementItem } from "@/lib/announcements";
-import { Button } from "@/components/ui/Button";
 import { Field, inputClass, textareaClass } from "@/components/forms/Field";
+import { PublishActions } from "@/components/admin/PublishActions";
 
 type RefOption = { id: string; label: string };
 
@@ -149,26 +149,20 @@ export function AnnouncementEditorForm({
         </Field>
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <Button type="submit" name="intent" value="publish" variant="ember" disabled={pending}>
-          {pending ? "Saving…" : "Publish"}
-        </Button>
-        <Button type="submit" name="intent" value="draft" variant="ghost" disabled={pending}>
-          Save draft
-        </Button>
-        {announcement ? (
-          <Link
-            href={`/admin/newsletter?source=announcement&id=${announcement.id}&subject=${encodeURIComponent(announcement.title)}`}
-            className="text-sm text-ember hover:underline self-center"
-          >
-            Mail subscribers
-          </Link>
-        ) : (
-          <Link href="/admin/announcements" className="text-sm text-mute hover:text-ink self-center">
-            Cancel
-          </Link>
-        )}
-      </div>
+      <PublishActions
+        pending={pending}
+        cancelHref={announcement ? undefined : "/admin/announcements"}
+        adminExtras={
+          announcement ? (
+            <Link
+              href={`/admin/newsletter?source=announcement&id=${announcement.id}&subject=${encodeURIComponent(announcement.title)}`}
+              className="text-sm text-ember hover:underline self-center"
+            >
+              Mail subscribers
+            </Link>
+          ) : null
+        }
+      />
     </form>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin-guard";
 import { redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { ResourceEditorForm } from "@/components/admin/ResourceEditorForm";
@@ -6,7 +7,8 @@ import { isResourcesDbReady } from "@/lib/resources";
 
 export const metadata: Metadata = { title: "Admin · New resource" };
 
-export default function AdminNewResourcePage() {
+export default async function AdminNewResourcePage() {
+  await requireAdminPage();
   if (!isResourcesDbReady()) redirect("/admin/resources");
   return (
     <Container className="py-12">

@@ -294,6 +294,22 @@ export const newsletterSends = pgTable("newsletter_sends", {
   error: text("error"),
 });
 
+/** Member-composed newsletters waiting for admin send. */
+export const newsletterDrafts = pgTable("newsletter_drafts", {
+  id: text("id").primaryKey(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  status: text("status").notNull().default("pending"),
+  createdByUserId: text("created_by_user_id"),
+  createdByEmail: text("created_by_email"),
+  sourceType: text("source_type"),
+  sourceId: text("source_id"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+});
+
 export const contactMessages = pgTable("contact_messages", {
   id: text("id").primaryKey(),
   firstName: text("first_name").notNull(),

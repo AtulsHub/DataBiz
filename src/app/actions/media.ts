@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import {
   CLOUDINARY_FOLDERS,
   isCloudinaryConfigured,
@@ -7,7 +8,8 @@ import {
   signedPrivateFileUrl,
 } from "@/lib/cloudinary";
 import type { CloudinaryFolder } from "@/lib/cloudinary-folders";
-import { canAccessAdmin } from "@/lib/roles";
+import { rateLimit } from "@/lib/rate-limit";
+import { canAccessDesk } from "@/lib/roles";
 import { getSession } from "@/lib/session";
 
 export type SignedUpload = {
@@ -37,8 +39,11 @@ export async function signPublicImageUpload(
   folder: CloudinaryFolder,
 ): Promise<SignUploadResult> {
   const session = await getSession();
-  if (!session || !canAccessAdmin(session.user.role)) {
-    return { ok: false, error: "Admin sign-in required to upload images." };
+  if (!session || !canAccessDesk(session.user.role)) {
+    return {
+      ok: false,
+      error: "Member or admin sign-in required to upload images.",
+    };
   }
 
   if (!isCloudinaryConfigured()) {
@@ -70,6 +75,46 @@ export async function signPublicImageUpload(
 
 export async function signEventPosterUpload(): Promise<SignUploadResult> {
   return signPublicImageUpload(CLOUDINARY_FOLDERS.posters);
+}
+
+/** Rate-limited public signer for alumni profile photos on the update form. */
+export async function signAlumniAvatarUpload(
+  folder: CloudinaryFolder = CLOUDINARY_FOLDERS.avatars,
+): Promise<SignUploadResult> {
+  if (folder !== CLOUDINARY_FOLDERS.avatars) {
+    return { ok: false, error: "Alumni photos only upload to avatars." };
+  }
+
+  if (!isCloudinaryConfigured()) {
+    return {
+      ok: false,
+      error:
+        "Cloudinary env vars are missing. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to .env.local.",
+    };
+  }
+
+  const headerList = await headers();
+  const ip =
+    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    headerList.get("x-real-ip") ||
+    "unknown";
+  if (!rateLimit(`alumni-avatar:${ip}`, 8, 60_000)) {
+    return { ok: false, error: "Too many uploads. Try again in a minute." };
+  }
+
+  try {
+    const upload = signBrowserUpload({
+      folder: CLOUDINARY_FOLDERS.avatars,
+      resourceType: "image",
+    });
+    return { ok: true, upload };
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error ? error.message : "Could not sign the upload.",
+    };
+  }
 }
 
 export async function signResumeUpload(): Promise<SignUploadResult> {

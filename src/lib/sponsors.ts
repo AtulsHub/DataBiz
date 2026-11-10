@@ -65,16 +65,18 @@ export async function getBrochurePublicId(): Promise<string | null> {
 }
 
 export async function getBrochureDownloadUrl(): Promise<string | undefined> {
+  const { site } = await import("@/content/site");
   const publicId = await getBrochurePublicId();
-  if (!publicId) return undefined;
-  if (/^https?:\/\//i.test(publicId)) return publicId;
+  const value = publicId || site.brochureUrl;
+  if (!value) return undefined;
+  if (/^https?:\/\//i.test(value)) return value;
   try {
-    return signedPrivateFileUrl(publicId, { expiresInSeconds: 60 * 30 });
+    return signedPrivateFileUrl(value, { expiresInSeconds: 60 * 30 });
   } catch {
     const cloud =
       process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim() ||
       process.env.CLOUDINARY_CLOUD_NAME?.trim();
     if (!cloud) return undefined;
-    return `https://res.cloudinary.com/${cloud}/raw/upload/${publicId}`;
+    return `https://res.cloudinary.com/${cloud}/raw/upload/${value}`;
   }
 }

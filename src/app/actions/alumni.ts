@@ -25,6 +25,7 @@ const submitFields = z.object({
   organization: z.string().trim().min(1, "Where are you now?"),
   linkedinUrl: z.string().trim().optional(),
   note: z.string().trim().optional(),
+  photoPublicId: z.string().trim().optional(),
 });
 
 function fieldErrorsFromZod(error: z.ZodError): Record<string, string> {
@@ -49,6 +50,7 @@ export async function submitAlumniUpdate(
   }
 
   const linkedinRaw = String(formData.get("linkedin") ?? "").trim();
+  const photoRaw = String(formData.get("photoPublicId") ?? "").trim();
   const parsed = submitFields.safeParse({
     name: formData.get("name"),
     batch: formData.get("batch"),
@@ -59,6 +61,7 @@ export async function submitAlumniUpdate(
     organization: formData.get("organization"),
     linkedinUrl: linkedinRaw || undefined,
     note: String(formData.get("note") ?? "").trim() || undefined,
+    photoPublicId: photoRaw || undefined,
   });
 
   if (!parsed.success) {
@@ -110,6 +113,7 @@ export async function submitAlumniUpdate(
       currentTitle: parsed.data.currentTitle,
       organization: parsed.data.organization,
       linkedinUrl: parsed.data.linkedinUrl || null,
+      photoPublicId: parsed.data.photoPublicId || null,
       note: parsed.data.note || null,
       status: "pending",
       sortOrder: 0,
@@ -185,6 +189,7 @@ export async function updateAlumniProfile(
       organization: z.string().trim().min(1),
       linkedinUrl: z.string().trim().optional(),
       note: z.string().trim().optional(),
+      photoPublicId: z.string().trim().optional(),
       status: z.enum(["pending", "published"]),
       sortOrder: z.string().optional(),
     })
@@ -197,6 +202,8 @@ export async function updateAlumniProfile(
       organization: formData.get("organization"),
       linkedinUrl: String(formData.get("linkedinUrl") ?? "").trim() || undefined,
       note: String(formData.get("note") ?? "").trim() || undefined,
+      photoPublicId:
+        String(formData.get("photoPublicId") ?? "").trim() || undefined,
       status: formData.get("status"),
       sortOrder: String(formData.get("sortOrder") ?? ""),
     });
@@ -216,6 +223,7 @@ export async function updateAlumniProfile(
       currentTitle: parsed.data.currentTitle,
       organization: parsed.data.organization,
       linkedinUrl: parsed.data.linkedinUrl || null,
+      photoPublicId: parsed.data.photoPublicId || null,
       note: parsed.data.note || null,
       status: parsed.data.status,
       sortOrder: Number(parsed.data.sortOrder || 0) || 0,

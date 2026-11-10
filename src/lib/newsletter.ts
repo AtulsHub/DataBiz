@@ -3,6 +3,7 @@ import { getDb, isDatabaseConfigured } from "@/db";
 import {
   eventRegistrations,
   events,
+  newsletterDrafts,
   newsletterSends,
   subscribers,
 } from "@/db/schema";
@@ -61,6 +62,39 @@ export async function listConfirmedSubscribers() {
     .from(subscribers)
     .where(eq(subscribers.status, "confirmed"))
     .orderBy(desc(subscribers.confirmedAt));
+}
+
+export type NewsletterDraftItem = {
+  id: string;
+  subject: string;
+  body: string;
+  status: string;
+  createdByEmail?: string;
+  sourceType?: string;
+  sourceId?: string;
+  createdAt: string;
+};
+
+export async function listPendingNewsletterDrafts(): Promise<
+  NewsletterDraftItem[]
+> {
+  const db = getDb();
+  if (!db) return [];
+  const rows = await db
+    .select()
+    .from(newsletterDrafts)
+    .where(eq(newsletterDrafts.status, "pending"))
+    .orderBy(desc(newsletterDrafts.createdAt));
+  return rows.map((row) => ({
+    id: row.id,
+    subject: row.subject,
+    body: row.body,
+    status: row.status,
+    createdByEmail: row.createdByEmail ?? undefined,
+    sourceType: row.sourceType ?? undefined,
+    sourceId: row.sourceId ?? undefined,
+    createdAt: row.createdAt.toISOString(),
+  }));
 }
 
 export async function listNewsletterSends(limit = 20): Promise<NewsletterSendItem[]> {

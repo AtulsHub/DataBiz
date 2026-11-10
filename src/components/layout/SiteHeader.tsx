@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
-import { navPrimary, site } from "@/content/site";
+import { navMore, navPrimary, site } from "@/content/site";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -30,12 +30,18 @@ export function SiteHeader() {
     };
   }, [open]);
 
+  function isActive(href: string) {
+    return href === "/"
+      ? pathname === "/"
+      : pathname === href || pathname.startsWith(`${href}/`);
+  }
+
   return (
     <header
       className={cn(
         "sticky top-0 z-50 border-b transition-[background,border-color,backdrop-filter] duration-300",
         scrolled || open
-          ? "border-line bg-paper/90 backdrop-blur-md"
+          ? "border-line bg-[color-mix(in_srgb,var(--paper-elevated)_78%,transparent)] shadow-[var(--shadow-soft)] backdrop-blur-xl"
           : "border-transparent bg-transparent",
       )}
     >
@@ -52,15 +58,9 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav
-          className="hidden items-center gap-7 lg:flex"
-          aria-label="Primary"
-        >
+        <nav className="hidden items-center gap-6 xl:gap-7 lg:flex" aria-label="Primary">
           {navPrimary.map((item) => {
-            const active =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = isActive(item.href);
             return (
               <Link
                 key={item.href}
@@ -89,7 +89,12 @@ export function SiteHeader() {
           >
             Account
           </Button>
-          <Button href="/join" variant="ember" size="sm" className="hidden sm:inline-flex">
+          <Button
+            href="/join"
+            variant="ember"
+            size="sm"
+            className="hidden sm:inline-flex"
+          >
             Join
           </Button>
           <button
@@ -108,20 +113,37 @@ export function SiteHeader() {
       {open ? (
         <div
           id="mobile-nav"
-          className="border-t border-line bg-paper px-[var(--gutter)] py-5 lg:hidden"
+          className="max-h-[min(70vh,32rem)] overflow-y-auto border-t border-line bg-paper px-[var(--gutter)] py-5 lg:hidden"
         >
-          <nav className="flex flex-col" aria-label="Mobile">
-            {[
-              ...navPrimary,
-              { href: "/team", label: "Team" },
-              { href: "/join", label: "Join" },
-              { href: "/account", label: "Account" },
-              { href: "/contact", label: "Contact" },
-            ].map((item) => (
+          <p className="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-mute">
+            Main
+          </p>
+          <nav className="mt-2 flex flex-col" aria-label="Mobile primary">
+            {navPrimary.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="border-b border-line py-3.5 text-base font-medium text-ink last:border-0"
+                className={cn(
+                  "border-b border-line py-3.5 text-base font-medium",
+                  isActive(item.href) ? "text-ember" : "text-ink",
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <p className="mt-6 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-mute">
+            More
+          </p>
+          <nav className="mt-2 flex flex-col" aria-label="Mobile more">
+            {navMore.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "border-b border-line py-3.5 text-base font-medium last:border-0",
+                  isActive(item.href) ? "text-ember" : "text-ink",
+                )}
               >
                 {item.label}
               </Link>

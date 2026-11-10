@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getDb, isDatabaseConfigured } from "@/db";
-import { subscribers } from "@/db/schema";
+import { newsletterDrafts, subscribers } from "@/db/schema";
 import { sendTransactionalEmail } from "@/lib/email";
 import {
   confirmUrl,
@@ -17,8 +17,9 @@ import {
   sendEventReminder,
   sendNewsletterToConfirmed,
 } from "@/lib/newsletter";
+import { canPublish } from "@/lib/roles";
 import { rateLimit } from "@/lib/rate-limit";
-import { requireAdmin } from "@/lib/session";
+import { requireAdmin, requireDesk } from "@/lib/session";
 
 export type NewsletterActionResult = {
   ok: boolean;
@@ -188,6 +189,69 @@ export async function unsubscribeNewsletterToken(
   return { ok: true };
 }
 
+export async function submitNewsletterDraft(
+  _prev: NewsletterActionResult | undefined,
+  formData: FormData,
+): Promise<NewsletterActionResult> {
+  const session = await requireDesk();
+  if (!isNewsletterDbReady()) {
+    return requireNewsletterDb()!;
+  }
+
+  const subject = formString(formData, "subject").trim();
+  const body = formString(formData, "body").trim();
+  const sourceType = formString(formData, "sourceType").trim() || undefined;
+  const sourceId = formString(formData, "sourceId").trim() || undefined;
+
+  if (!subject) {
+    return {
+      ok: false,
+      error: "Subject is required.",
+      fieldErrors: { subject: "Required" },
+    };
+  }
+  if (!body) {
+    return {
+      ok: false,
+      error: "Body is required.",
+      fieldErrors: { body: "Required" },
+    };
+  }
+
+  // Admins can send immediately from the same form.
+  if (canPublish(session.user.role)) {
+    return sendNewsletter(_prev, formData);
+  }
+
+  await getDb()!.insert(newsletterDrafts).values({
+    id: crypto.randomUUID(),
+    subject,
+    body,
+    status: "pending",
+    createdByUserId: session.user.id,
+    createdByEmail: session.user.email,
+    sourceType: sourceType || null,
+    sourceId: sourceId || null,
+  });
+
+  const inbox = process.env.CONTACT_INBOX?.trim();
+  if (inbox) {
+    await sendTransactionalEmail({
+      to: inbox,
+      subject: `Newsletter draft from ${session.user.email}`,
+      html: `<p>${session.user.email} submitted a newsletter draft for approval.</p><p><strong>${subject}</strong></p><pre>${body}</pre><p>Review in admin → Newsletter.</p>`,
+      replyTo: session.user.email,
+    }).catch(() => undefined);
+  }
+
+  revalidatePath("/admin/newsletter");
+  return {
+    ok: true,
+    message:
+      "Draft submitted. An admin will review and send it to the confirmed list.",
+  };
+}
+
 export async function sendNewsletter(
   _prev: NewsletterActionResult | undefined,
   formData: FormData,
@@ -201,6 +265,7 @@ export async function sendNewsletter(
   const body = formString(formData, "body").trim();
   const sourceType = formString(formData, "sourceType").trim() || undefined;
   const sourceId = formString(formData, "sourceId").trim() || undefined;
+  const draftId = formString(formData, "draftId").trim() || undefined;
 
   if (!subject) {
     return {
@@ -226,11 +291,35 @@ export async function sendNewsletter(
 
   if (!result.ok) return { ok: false, error: result.error };
 
+  if (draftId) {
+    await getDb()!
+      .update(newsletterDrafts)
+      .set({ status: "sent", reviewedAt: new Date() })
+      .where(eq(newsletterDrafts.id, draftId));
+  }
+
   revalidatePath("/admin/newsletter");
   return {
     ok: true,
     message: `Sent to ${result.recipientCount} subscriber${result.recipientCount === 1 ? "" : "s"}.`,
   };
+}
+
+export async function dismissNewsletterDraft(
+  draftId: string,
+): Promise<NewsletterActionResult> {
+  await requireAdmin();
+  if (!isNewsletterDbReady()) {
+    return requireNewsletterDb()!;
+  }
+
+  await getDb()!
+    .update(newsletterDrafts)
+    .set({ status: "rejected", reviewedAt: new Date() })
+    .where(eq(newsletterDrafts.id, draftId));
+
+  revalidatePath("/admin/newsletter");
+  return { ok: true, message: "Draft dismissed." };
 }
 
 export async function sendDueEventReminders(): Promise<NewsletterActionResult> {

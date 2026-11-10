@@ -10,6 +10,7 @@ import type { ActionResult } from "@/app/actions/events";
 import type { PathwayItem } from "@/lib/pathways";
 import { Button } from "@/components/ui/Button";
 import { Field, inputClass, textareaClass } from "@/components/forms/Field";
+import { PublishActions } from "@/components/admin/PublishActions";
 
 type ModuleDraft = {
   key: string;
@@ -259,20 +260,13 @@ export function PathwayEditorForm({ pathway }: Props) {
         </ul>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" variant="ember" disabled={pending}>
-          {pending ? "Saving…" : pathway ? "Save pathway" : "Create pathway"}
-        </Button>
-        {isPublished ? (
-          <Button href={`/learn/${pathway!.slug}`} variant="ghost">
-            View public page
-          </Button>
-        ) : (
-          <Link href="/admin/learn" className="text-sm text-mute hover:text-ink">
-            Back to list
-          </Link>
-        )}
-      </div>
+      <PublishActions
+        pending={pending}
+        cancelHref="/admin/learn"
+        publicHref={isPublished ? `/learn/${pathway!.slug}` : undefined}
+        publishLabel={pathway ? "Save & publish" : "Create & publish"}
+        draftLabel={pathway ? "Save draft" : "Create draft"}
+      />
     </form>
   );
 }

@@ -6,7 +6,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getDb, isDatabaseConfigured } from "@/db";
 import { posts } from "@/db/schema";
-import { requireAdmin } from "@/lib/session";
+import { clampToDraftIfNeeded } from "@/lib/publish";
+import { requireDesk } from "@/lib/session";
 import { slugify } from "@/lib/slug";
 import type { ActionResult } from "@/app/actions/events";
 
@@ -96,7 +97,7 @@ export async function createPost(
   _prev: ActionResult | undefined,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireDesk();
   const blocked = requirePostsDb();
   if (blocked) return blocked;
 
@@ -108,6 +109,12 @@ export async function createPost(
       fieldErrors: fieldErrorsFromZod(parsed.error),
     };
   }
+
+  const status = clampToDraftIfNeeded(
+    session.user.role,
+    parsed.data.status,
+    "draft",
+  );
 
   let id: string;
   try {
@@ -124,9 +131,9 @@ export async function createPost(
       body: parsed.data.body,
       authorName: parsed.data.authorName,
       tags: parseTags(parsed.data.tags),
-      status: parsed.data.status,
+      status,
       coverPublicId: parsed.data.coverPublicId || null,
-      publishedAt: parsed.data.status === "published" ? new Date() : null,
+      publishedAt: status === "published" ? new Date() : null,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -148,7 +155,7 @@ export async function updatePost(
   _prev: ActionResult | undefined,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireDesk();
   const blocked = requirePostsDb();
   if (blocked) return blocked;
 
@@ -160,6 +167,12 @@ export async function updatePost(
       fieldErrors: fieldErrorsFromZod(parsed.error),
     };
   }
+
+  const status = clampToDraftIfNeeded(
+    session.user.role,
+    parsed.data.status,
+    "draft",
+  );
 
   try {
     const db = getDb()!;
@@ -185,12 +198,10 @@ export async function updatePost(
         body: parsed.data.body,
         authorName: parsed.data.authorName,
         tags: parseTags(parsed.data.tags),
-        status: parsed.data.status,
+        status,
         coverPublicId: parsed.data.coverPublicId || null,
         publishedAt:
-          parsed.data.status === "published"
-            ? existing.publishedAt ?? new Date()
-            : null,
+          status === "published" ? existing.publishedAt ?? new Date() : null,
         updatedAt: new Date(),
       })
       .where(eq(posts.id, postId));

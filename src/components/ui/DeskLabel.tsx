@@ -19,7 +19,7 @@ export function DeskLabel({
       className={cn(
         "font-mono text-[0.68rem] uppercase tracking-[0.2em]",
         tone === "default" && "text-mute",
-        tone === "inverse" && "text-white/45",
+        tone === "inverse" && "text-on-void-mute",
         tone === "signal" && "text-ember",
         className,
       )}

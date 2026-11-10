@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/lib/admin-guard";
 import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { ResourceEditorForm } from "@/components/admin/ResourceEditorForm";
@@ -15,6 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AdminResourceDetailPage({ params }: Props) {
+  await requireAdminPage();
   if (!isResourcesDbReady()) redirect("/admin/resources");
   const { id } = await params;
   const resource = await getAdminResource(id);

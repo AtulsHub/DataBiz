@@ -15,7 +15,8 @@ import {
   canTrackPathwayProgress,
   ensureSeedPathways,
 } from "@/lib/pathways";
-import { requireAdmin, getSession } from "@/lib/session";
+import { clampToDraftIfNeeded } from "@/lib/publish";
+import { requireAdmin, requireDesk, getSession } from "@/lib/session";
 import { slugify } from "@/lib/slug";
 
 const moduleSchema = z.object({
@@ -91,12 +92,23 @@ function parsePathwayForm(formData: FormData) {
     };
   }
 
+  const intent = formString(formData, "intent");
+  const statusFromIntent =
+    intent === "publish"
+      ? "published"
+      : intent === "draft"
+        ? "draft"
+        : undefined;
+  const status =
+    statusFromIntent ||
+    (formString(formData, "status") === "published" ? "published" : "draft");
+
   return pathwayFields.safeParse({
     title: formString(formData, "title"),
     slug: formString(formData, "slug") || undefined,
     summary: formString(formData, "summary"),
     discipline: formString(formData, "discipline") || "other",
-    status: formString(formData, "status") || "draft",
+    status,
     sortOrder: formString(formData, "sortOrder") || "0",
     modules: modulesRaw,
   });
@@ -159,7 +171,7 @@ export async function createPathway(
   _prev: ActionResult | undefined,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireDesk();
   const blocked = requirePathwaysDb();
   if (blocked) return blocked;
 
@@ -171,6 +183,12 @@ export async function createPathway(
       fieldErrors: fieldErrorsFromZod(parsed.error),
     };
   }
+
+  const status = clampToDraftIfNeeded(
+    session.user.role,
+    parsed.data.status,
+    "draft",
+  );
 
   let id: string;
   try {
@@ -187,7 +205,7 @@ export async function createPathway(
       title: parsed.data.title,
       summary: parsed.data.summary,
       discipline: parsed.data.discipline,
-      status: parsed.data.status,
+      status,
       sortOrder: parsed.data.sortOrder,
     });
 
@@ -221,7 +239,7 @@ export async function updatePathway(
   _prev: ActionResult | undefined,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireDesk();
   const blocked = requirePathwaysDb();
   if (blocked) return blocked;
 
@@ -233,6 +251,12 @@ export async function updatePathway(
       fieldErrors: fieldErrorsFromZod(parsed.error),
     };
   }
+
+  const status = clampToDraftIfNeeded(
+    session.user.role,
+    parsed.data.status,
+    "draft",
+  );
 
   try {
     const db = getDb()!;
@@ -256,7 +280,7 @@ export async function updatePathway(
         slug,
         summary: parsed.data.summary,
         discipline: parsed.data.discipline,
-        status: parsed.data.status,
+        status,
         sortOrder: parsed.data.sortOrder,
       })
       .where(eq(pathways.id, pathwayId));

@@ -6,7 +6,8 @@ import { z } from "zod";
 import { getDb, isDatabaseConfigured } from "@/db";
 import { eventPhotos, events } from "@/db/schema";
 import type { ActionResult } from "@/app/actions/events";
-import { requireAdmin } from "@/lib/session";
+import { canPublish } from "@/lib/roles";
+import { requireDesk } from "@/lib/session";
 
 function requireDb(): ActionResult | null {
   if (!isDatabaseConfigured() || !getDb()) {
@@ -29,7 +30,7 @@ export async function addEventPhoto(
   _prev: ActionResult | undefined,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const session = await requireDesk();
   const blocked = requireDb();
   if (blocked) return blocked;
 
@@ -48,11 +49,20 @@ export async function addEventPhoto(
 
   const db = getDb()!;
   const [event] = await db
-    .select({ id: events.id, slug: events.slug })
+    .select({ id: events.id, slug: events.slug, status: events.status })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
   if (!event) return { ok: false, error: "Event not found." };
+
+  // Members may only attach photos to draft events; admin publishes the event.
+  if (!canPublish(session.user.role) && event.status !== "draft") {
+    return {
+      ok: false,
+      error:
+        "Members can upload gallery photos only on draft events. Ask an admin to attach photos to a live event, or keep the event in draft until approved.",
+    };
+  }
 
   await db.insert(eventPhotos).values({
     id: crypto.randomUUID(),
@@ -63,6 +73,8 @@ export async function addEventPhoto(
   });
 
   revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath("/admin/gallery");
+  revalidatePath("/gallery");
   revalidatePath(`/events/${event.slug}`);
   return { ok: true };
 }
@@ -71,7 +83,7 @@ export async function deleteEventPhoto(
   photoId: string,
   eventId: string,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  await requireDesk();
   const blocked = requireDb();
   if (blocked) return blocked;
 
@@ -84,6 +96,20 @@ export async function deleteEventPhoto(
 
   await db.delete(eventPhotos).where(eq(eventPhotos.id, photoId));
   revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath("/admin/gallery");
+  revalidatePath("/gallery");
   if (event) revalidatePath(`/events/${event.slug}`);
   return { ok: true };
+}
+
+export async function addGalleryPhoto(
+  _prev: ActionResult | undefined,
+  formData: FormData,
+): Promise<ActionResult> {
+  const eventId = formString(formData, "eventId").trim();
+  if (!eventId) {
+    return { ok: false, error: "Pick an event for this photo." };
+  }
+
+  return addEventPhoto(eventId, undefined, formData);
 }

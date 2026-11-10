@@ -9,9 +9,11 @@ import {
 } from "@/app/actions/events";
 import type { EventItem } from "@/lib/events";
 import { toDatetimeLocalValue } from "@/lib/datetime";
-import { Button } from "@/components/ui/Button";
 import { Field, inputClass, textareaClass } from "@/components/forms/Field";
 import { PosterUpload } from "@/components/admin/PosterUpload";
+import { PublishActions } from "@/components/admin/PublishActions";
+import { useDesk } from "@/components/admin/DeskContext";
+import { Button } from "@/components/ui/Button";
 
 type Props = {
   event?: EventItem;
@@ -20,6 +22,7 @@ type Props = {
 const initial: ActionResult = { ok: false };
 
 export function EventEditorForm({ event }: Props) {
+  const { canPublish } = useDesk();
   const action = event
     ? updateEvent.bind(null, event.id!)
     : createEvent;
@@ -241,34 +244,39 @@ export function EventEditorForm({ event }: Props) {
         />
       </Field>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          type="submit"
-          name="intent"
-          value="publish"
-          variant="ember"
-          disabled={pending}
-        >
-          {pending ? "Saving…" : "Publish"}
-        </Button>
-        <Button type="submit" variant="ghost" disabled={pending}>
-          {pending ? "Saving…" : "Save"}
-        </Button>
-        {event && event.status !== "draft" ? (
-          <Button href={`/events/${event.slug}`} variant="ghost">
-            View public page
-          </Button>
-        ) : event ? (
-          <p className="text-sm text-mute">
-            Public URL opens after you click{" "}
-            <span className="font-medium text-ink">Publish</span>.
-          </p>
-        ) : (
-          <Link href="/admin/events" className="text-sm text-mute hover:text-ink">
-            Cancel
-          </Link>
-        )}
-      </div>
+      <PublishActions
+        pending={pending}
+        cancelHref={event ? undefined : "/admin/events"}
+        publicHref={
+          canPublish && event && event.status !== "draft"
+            ? `/events/${event.slug}`
+            : undefined
+        }
+        adminExtras={
+          event ? (
+            <Button
+              type="submit"
+              name="intent"
+              value="past"
+              variant="ghost"
+              disabled={pending}
+            >
+              Mark past
+            </Button>
+          ) : null
+        }
+      />
+      {!canPublish && event ? (
+        <p className="text-sm text-mute">
+          Current status: <span className="font-mono text-ink">{event.status}</span>
+          . Only an admin can publish or mark past.
+        </p>
+      ) : null}
+      {!event ? (
+        <Link href="/admin/events" className="sr-only">
+          Cancel
+        </Link>
+      ) : null}
     </form>
   );
 }
