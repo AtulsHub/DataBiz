@@ -7,13 +7,15 @@ import {
   listMyApplications,
   listMyPathwayProgress,
   listMyRegistrations,
+  listMyResources,
   type MyApplicationBundle,
   type MyRegistration,
+  type MyResource,
 } from "@/app/actions/account";
 import type { PathwayProgressSummary } from "@/lib/pathways";
 import { ApplicationCard } from "@/components/account/ApplicationCard";
 import { canRunInterviews } from "@/lib/applications";
-import type { Role } from "@/lib/roles";
+import { hasMinRole, type Role } from "@/lib/roles";
 import { formatDateTime } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -33,12 +35,14 @@ export function AccountPanel() {
   const [applications, setApplications] = useState<MyApplicationBundle[] | null>(
     null,
   );
+  const [resources, setResources] = useState<MyResource[] | null>(null);
 
   useEffect(() => {
     if (!data?.user) {
       setRegistrations(null);
       setPathwayProgress(null);
       setApplications(null);
+      setResources(null);
       return;
     }
     let cancelled = false;
@@ -46,11 +50,13 @@ export function AccountPanel() {
       listMyRegistrations(),
       listMyPathwayProgress(),
       listMyApplications(),
-    ]).then(([regs, progress, apps]) => {
+      listMyResources(),
+    ]).then(([regs, progress, apps, memberResources]) => {
       if (!cancelled) {
         setRegistrations(regs);
         setPathwayProgress(progress);
         setApplications(apps);
+        setResources(memberResources);
       }
     });
     return () => {
@@ -260,6 +266,49 @@ export function AccountPanel() {
           </div>
         </Container>
       </section>
+
+      {hasMinRole((user.role as Role) || "applicant", "member") ? (
+        <section className="border-t border-line py-16 sm:py-20">
+          <Container className="max-w-5xl">
+            <DeskLabel>Members</DeskLabel>
+            <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight">
+              Resources
+            </h2>
+            <div className="mt-8">
+              {resources === null ? (
+                <p className="text-sm text-mute">Loading resources…</p>
+              ) : resources.length === 0 ? (
+                <p className="text-sm text-mute">
+                  No member resources published yet.
+                </p>
+              ) : (
+                <ul className="divide-y divide-line border-y border-line">
+                  {resources.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex flex-wrap items-baseline justify-between gap-3 py-4"
+                    >
+                      <div>
+                        <p className="font-medium text-ink">{item.title}</p>
+                        {item.description ? (
+                          <p className="mt-1 text-sm text-mute">
+                            {item.description}
+                          </p>
+                        ) : null}
+                      </div>
+                      {item.href ? (
+                        <Button href={item.href} external variant="ghost" size="sm">
+                          Open
+                        </Button>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Container>
+        </section>
+      ) : null}
 
       <section className="border-t border-line py-16 sm:py-20">
         <Container className="max-w-5xl">

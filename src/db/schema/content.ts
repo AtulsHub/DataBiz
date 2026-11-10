@@ -243,6 +243,16 @@ export const sponsors = pgTable("sponsors", {
   sortOrder: integer("sort_order").notNull().default(0),
 });
 
+export const eventPhotos = pgTable("event_photos", {
+  id: text("id").primaryKey(),
+  eventId: text("event_id")
+    .notNull()
+    .references(() => events.id, { onDelete: "cascade" }),
+  publicId: text("public_id").notNull(),
+  caption: text("caption").notNull().default(""),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
 export const sitePages = pgTable("site_pages", {
   slug: text("slug").primaryKey(),
   title: text("title").notNull(),

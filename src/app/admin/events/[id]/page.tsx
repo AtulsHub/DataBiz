@@ -5,11 +5,13 @@ import { Container } from "@/components/ui/Container";
 import { EventEditorForm } from "@/components/admin/EventEditorForm";
 import { EventRegistrationsTable } from "@/components/admin/EventRegistrationsTable";
 import { EventReminderButton } from "@/components/admin/EventReminderButton";
+import { EventPhotosForm } from "@/components/admin/EventPhotosForm";
 import {
   getAdminEvent,
   isEventsDbReady,
   listEventRegistrations,
 } from "@/lib/events";
+import { listEventPhotos } from "@/lib/event-photos";
 import { getDb } from "@/db";
 import { events as eventsTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -34,6 +36,7 @@ export default async function AdminEventDetailPage({ params }: Props) {
   if (!event?.id) notFound();
 
   const registrations = await listEventRegistrations(event.id);
+  const photos = await listEventPhotos(event.id);
   const db = getDb();
   const [eventRow] = db
     ? await db
@@ -77,6 +80,16 @@ export default async function AdminEventDetailPage({ params }: Props) {
           eventId={event.id}
           alreadySent={Boolean(eventRow?.reminderSentAt)}
         />
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">
+          Gallery
+        </h2>
+        <p className="text-sm text-mute">
+          Photos appear on the public event page after the event is past.
+        </p>
+        <EventPhotosForm eventId={event.id} photos={photos} />
       </section>
 
       <section>

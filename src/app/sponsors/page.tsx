@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import { Suspense } from "react";
+import { connection } from "next/server";
 import { sponsorsCopy } from "@/content/pages";
 import { site } from "@/content/site";
+import {
+  getBrochureDownloadUrl,
+  listSponsors,
+} from "@/lib/sponsors";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { DeskLabel } from "@/components/ui/DeskLabel";
@@ -13,17 +20,13 @@ export const metadata: Metadata = {
   description: sponsorsCopy.body,
 };
 
-export default function SponsorsPage() {
+async function SponsorsBody() {
+  await connection();
+  const sponsors = await listSponsors();
+  const brochureUrl = await getBrochureDownloadUrl();
+
   return (
     <>
-      <PageHero
-        index="11"
-        label="Sponsors"
-        title={sponsorsCopy.headline}
-        description={sponsorsCopy.body}
-        align="split"
-      />
-
       <section className="border-b border-line py-16 sm:py-20">
         <Container className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
           <Reveal>
@@ -32,11 +35,44 @@ export default function SponsorsPage() {
               Organizations backing the work.
             </h2>
           </Reveal>
-          <EmptyState
-            label="Logos pending"
-            title="No sponsors are listed yet."
-            body="We only show a logo once the organization has agreed to it. This space stays empty until then."
-          />
+          {sponsors.length === 0 ? (
+            <EmptyState
+              label="Logos pending"
+              title="No sponsors are listed yet."
+              body="We only show a logo once the organization has agreed to it. This space stays empty until then."
+            />
+          ) : (
+            <ul className="grid gap-6 sm:grid-cols-2">
+              {sponsors.map((sponsor) => (
+                <li key={sponsor.id} className="border border-line bg-paper-elevated p-5">
+                  {sponsor.logoUrl ? (
+                    <Image
+                      src={sponsor.logoUrl}
+                      alt={sponsor.name}
+                      width={240}
+                      height={80}
+                      className="h-12 w-auto object-contain"
+                    />
+                  ) : (
+                    <p className="font-display text-xl font-semibold">{sponsor.name}</p>
+                  )}
+                  {sponsor.blurb ? (
+                    <p className="mt-3 text-sm text-steel">{sponsor.blurb}</p>
+                  ) : null}
+                  {sponsor.url ? (
+                    <a
+                      href={sponsor.url}
+                      className="mt-3 inline-block text-sm text-ember hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Visit
+                    </a>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
         </Container>
       </section>
 
@@ -50,37 +86,82 @@ export default function SponsorsPage() {
               Write to the core.
             </h2>
             <p className="mt-4 max-w-lg leading-relaxed text-white/70">
-              Tell us what you&apos;d like to support — a session, a fest, or the society&apos;s year-round work — and
-              we&apos;ll reply with options.
+              Tell us what you&apos;d like to support — a session, a fest, or the
+              society&apos;s year-round work — and we&apos;ll reply with options.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button href={`mailto:${site.email}?subject=Sponsorship`} variant="spark" size="md">
+              <Button
+                href={`mailto:${site.email}?subject=Sponsorship`}
+                variant="spark"
+                size="md"
+              >
                 {site.email}
               </Button>
               <Button href="/contact" variant="inverse" size="md">
                 Contact form
               </Button>
+              {site.socials.linkedin ? (
+                <Button href={site.socials.linkedin} external variant="inverse" size="md">
+                  LinkedIn
+                </Button>
+              ) : null}
+              {site.socials.instagram ? (
+                <Button href={site.socials.instagram} external variant="inverse" size="md">
+                  Instagram
+                </Button>
+              ) : null}
             </div>
           </div>
 
           <div className="self-end border border-white/15 p-6">
             <DeskLabel tone="inverse">Brochure</DeskLabel>
             <p className="mt-3 leading-relaxed text-white/70">
-              The sponsorship brochure hasn&apos;t been published yet. Email the core and we&apos;ll send it directly.
+              {brochureUrl
+                ? "Download the sponsorship brochure as a PDF."
+                : "The sponsorship brochure hasn't been published yet. Email the core and we'll send it directly."}
             </p>
-            <Button
-              type="button"
-              variant="inverse"
-              size="md"
-              disabled
-              aria-disabled="true"
-              className="mt-5 cursor-not-allowed opacity-50 hover:bg-paper-elevated"
-            >
-              Brochure PDF — coming soon
-            </Button>
+            {brochureUrl ? (
+              <Button
+                href={brochureUrl}
+                external
+                variant="inverse"
+                size="md"
+                className="mt-5"
+              >
+                Download brochure
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="inverse"
+                size="md"
+                disabled
+                aria-disabled="true"
+                className="mt-5 cursor-not-allowed opacity-50"
+              >
+                Brochure PDF — coming soon
+              </Button>
+            )}
           </div>
         </Container>
       </section>
+    </>
+  );
+}
+
+export default function SponsorsPage() {
+  return (
+    <>
+      <PageHero
+        index="11"
+        label="Sponsors"
+        title={sponsorsCopy.headline}
+        description={sponsorsCopy.body}
+        align="split"
+      />
+      <Suspense fallback={<div className="min-h-[40vh]" aria-hidden />}>
+        <SponsorsBody />
+      </Suspense>
     </>
   );
 }

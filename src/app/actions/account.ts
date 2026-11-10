@@ -13,6 +13,12 @@ import {
   listUserPathwayProgress,
   type PathwayProgressSummary,
 } from "@/lib/pathways";
+import {
+  listResources,
+  resourceHref,
+  type ResourceItem,
+} from "@/lib/resources";
+import { hasMinRole } from "@/lib/roles";
 import { getSession } from "@/lib/session";
 
 export type MyRegistration = {
@@ -94,4 +100,17 @@ export async function listMyApplications(): Promise<MyApplicationBundle[]> {
       slots: await listSlotsForDrive(application.drive.id),
     })),
   );
+}
+
+export type MyResource = ResourceItem & { href?: string };
+
+export async function listMyResources(): Promise<MyResource[]> {
+  if (!isDatabaseConfigured()) return [];
+  const session = await getSession();
+  if (!session || !hasMinRole(session.user.role, "member")) return [];
+  const items = await listResources();
+  return items.map((item) => ({
+    ...item,
+    href: resourceHref(item),
+  }));
 }

@@ -7,13 +7,5 @@ export type Announcement = {
   href?: string;
 };
 
+/** Empty until the core publishes notices in Neon. */
 export const announcements: Announcement[] = [];
-
-export function getPublishedAnnouncements() {
-  return announcements
-    .filter((a) => a.status === "published")
-    .sort(
-      (a, b) =>
-        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
-    );
-}

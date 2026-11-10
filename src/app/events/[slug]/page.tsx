@@ -15,6 +15,7 @@ import {
   getEpisodeBySlug,
   getPublishedEpisodeByEventId,
 } from "@/lib/episodes";
+import { listEventPhotos } from "@/lib/event-photos";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { getSession } from "@/lib/session";
 import { Button } from "@/components/ui/Button";
@@ -55,6 +56,7 @@ async function EventContent({ slug }: { slug: string }) {
     : event.episodeSlug
       ? await getEpisodeBySlug(event.episodeSlug)
       : null;
+  const photos = event.id ? await listEventPhotos(event.id) : [];
   const session = await getSession();
   const databaseReady = isEventsDbReady();
 
@@ -118,6 +120,29 @@ async function EventContent({ slug }: { slug: string }) {
                     </Button>
                   ) : null}
                 </div>
+                {photos.length > 0 ? (
+                  <div className="mt-10">
+                    <DeskLabel index="Gallery">Photos</DeskLabel>
+                    <ul className="mt-5 grid gap-4 sm:grid-cols-2">
+                      {photos.map((photo) => (
+                        <li key={photo.id}>
+                          {photo.url ? (
+                            <Image
+                              src={photo.url}
+                              alt={photo.caption || `Photo from ${event.title}`}
+                              width={800}
+                              height={500}
+                              className="aspect-video w-full rounded-[var(--radius)] border border-line object-cover"
+                            />
+                          ) : null}
+                          {photo.caption ? (
+                            <p className="mt-2 text-sm text-steel">{photo.caption}</p>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </article>

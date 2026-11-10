@@ -6,6 +6,7 @@ export const CLOUDINARY_FOLDERS = {
   avatars: "avatars",
   sponsors: "sponsors",
   resumes: "resumes",
+  resources: "resources",
 } as const;
 
 export type CloudinaryFolder =

@@ -12,6 +12,9 @@ const links = [
   { href: "/admin/learn", label: "Pathways" },
   { href: "/admin/drives", label: "Drives" },
   { href: "/admin/newsletter", label: "Newsletter" },
+  { href: "/admin/announcements", label: "Announcements" },
+  { href: "/admin/sponsors", label: "Sponsors" },
+  { href: "/admin/resources", label: "Resources" },
   { href: "/admin/alumni", label: "Alumni" },
   { href: "/admin/users", label: "Users" },
 ] as const;
