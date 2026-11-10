@@ -1,3 +1,10 @@
 minimumReleaseAgeExclude:
   - framer-motion@14.11.1
   - motion-dom@14.11.1
+
+# pnpm 12: dependency lifecycle scripts must be explicitly allowed
+allowBuilds:
+  esbuild: true
+
+autoInstallPeers: true
+strictPeerDependencies: false
