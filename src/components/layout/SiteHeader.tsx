@@ -81,12 +81,7 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button
-            href="/account"
-            variant="ghost"
-            size="sm"
-            className="hidden sm:inline-flex"
-          >
+          <Button href="/account" variant="ghost" size="sm">
             Account
           </Button>
           <Button
@@ -115,6 +110,14 @@ export function SiteHeader() {
           id="mobile-nav"
           className="max-h-[min(70vh,32rem)] overflow-y-auto border-t border-line bg-paper px-[var(--gutter)] py-5 lg:hidden"
         >
+          <div className="mb-5 flex flex-wrap gap-2">
+            <Button href="/account" variant="ember" size="sm">
+              Account
+            </Button>
+            <Button href="/join" variant="ghost" size="sm">
+              Join
+            </Button>
+          </div>
           <p className="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-mute">
             Main
           </p>
