@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getAuth, isAuthConfigured } from "@/lib/auth";
+import { userHasCredentialPassword } from "@/lib/password";
 import {
   canAccessAdmin,
   canAccessDesk,
@@ -53,10 +54,19 @@ export async function getSession() {
   };
 }
 
-export async function requireSession(callbackURL = "/account") {
+export async function requireSession(
+  callbackURL = "/account",
+  options?: { allowWithoutPassword?: boolean },
+) {
   const session = await getSession();
   if (!session) {
     redirect(`/login?next=${encodeURIComponent(callbackURL)}`);
+  }
+  if (!options?.allowWithoutPassword) {
+    const hasPassword = await userHasCredentialPassword(session.user.id);
+    if (!hasPassword) {
+      redirect(`/set-password?next=${encodeURIComponent(callbackURL)}`);
+    }
   }
   return session;
 }

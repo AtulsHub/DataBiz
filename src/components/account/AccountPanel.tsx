@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { DeskLabel } from "@/components/ui/DeskLabel";
 import { PageHero } from "@/components/ui/PageHero";
+import { PasswordForm } from "@/components/account/PasswordForm";
 import { ProfileForm } from "@/components/account/ProfileForm";
 import { SignOutButton } from "@/components/account/SignOutButton";
 
@@ -102,6 +103,13 @@ export function AccountPanel() {
             <Button href="/login?next=/account" variant="primary" size="md">
               Sign in
             </Button>
+            <Button
+              href="/login?mode=signup&next=/account"
+              variant="ghost"
+              size="md"
+            >
+              Sign up
+            </Button>
             <Button href="/faq" variant="ghost" size="md">
               Read the FAQ
             </Button>
@@ -126,7 +134,7 @@ export function AccountPanel() {
       <PageHero
         label="Account"
         title={user.name?.trim() || "Your account"}
-        description="Edit your profile, review RSVPs, and track pathway modules from this page."
+        description="Change your password, edit your profile, and track RSVPs and pathways."
       >
         <div className="mt-6 flex flex-wrap gap-3">
           {hasMinRole((user.role as Role) || "applicant", "member") ? (
@@ -183,6 +191,18 @@ export function AccountPanel() {
                 }}
               />
             </div>
+          </div>
+        </Container>
+      </section>
+
+      <section className="border-t border-line py-16 sm:py-20">
+        <Container className="max-w-5xl">
+          <DeskLabel>Sign-in</DeskLabel>
+          <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight">
+            Change password
+          </h2>
+          <div className="mt-8 max-w-md">
+            <PasswordForm />
           </div>
         </Container>
       </section>
